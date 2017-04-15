@@ -1,3 +1,9 @@
+# user
+*.zip
+*.dta
+*.idx
+data/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
