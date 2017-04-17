@@ -29,11 +29,11 @@ def avg_movie(all, test):
 
 #calculate average of average user rating and movie rating 
 #for each (user, movie) pair 
-def avg_avg(all, test):
+def avg_avg(all(, test):)
 
 	pred_user = avg_user(all, test)
 	pred_movie = avg_movie(all, test)
-	pred_avg = pred_user+pred_movie/2 
+	pred_avg = (pred_user+pred_movie)/2 
 
 	return pred_avg 
 
