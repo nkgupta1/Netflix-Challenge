@@ -1,9 +1,14 @@
 import numpy as np
 from scipy import sparse
+import os.path
 
 # read a cached npy matrix from path
 def np_read(path='../data/um/', name='all'):
-    data = np.load(path + name + '.npy')
+    fname = path + name + '.npy'
+    if not os.path.isfile(fname):
+        data = np_write(path, name)
+    else:
+        data = np.load(fname)
     print(name + ' imported:', data.shape, data.dtype)
     return data
 
@@ -13,6 +18,7 @@ def np_write(path='../data/um/', name='all'):
         data = [[int(x) for x in line.split()] for line in f.readlines()]
         data = np.array(data, dtype=np.uint32)
         np.save(path + name, data)
+    return data
 
 # read a cached npy array of data from path and write a scipy sparse 
 # UsersxMovies matrix 
@@ -29,9 +35,14 @@ def sp_mat_write(path='../data/', data=None):
     csc = sparse.csc_matrix(mat)
     del mat  # free memory
     sparse.save_npz(path + 'csc', csc, compressed=False)
+    return csc
 
 # read a cached scipy sparse UsersxMovies matrix of all the data
 def sp_mat_read(path='../data/'):
-    data = sparse.load_npz(path + 'csc.npz')
-    print('imported csc matrix[user, movie]:', data.shape, data.dtype)
-    return data
+    fname = path + 'csc.npz'
+    if not os.path.isfile(fname):
+        csc = sp_mat_write(path)
+    else:
+        csc = sparse.load_npz(fname)
+    print('imported csc matrix[user, movie]:', csc.shape, csc.dtype)
+    return csc
