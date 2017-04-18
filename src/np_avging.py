@@ -1,4 +1,3 @@
-import numpy as np
 from cache import *
 
 data = np_read() #[user, movie, date, rating]
@@ -40,6 +39,7 @@ for p, point in enumerate(qual):
     qual_ratings.append((user_avgs[point[0] - 1] + movie_avgs[point[1] - 1]) / 2)
 qual_ratings = np.array(qual_ratings, dtype=np.float32)
 
+# save predictions
 np.savetxt('../data/qual_npavg.dta', qual_ratings, fmt='%.3f', newline='\n')
 print('finished!')
 
