@@ -25,8 +25,8 @@ for p, point in enumerate(data):
     movie_counts[point[1] - 1] += 1
 
 print('averaging ratings with counts...')
-assert(np.min(user_counts) > 0)
-assert(np.min(movie_counts) > 0)
+# assert(np.min(user_counts) > 0)
+# assert(np.min(movie_counts) > 0)
 user_avgs = user_avgs.astype(np.float32)
 user_avgs /= user_counts
 movie_avgs = movie_avgs.astype(np.float32)
@@ -37,9 +37,9 @@ print('making predictions on qual based on averages...')
 qual = np_read(name='qual')
 qual_ratings = []
 for p, point in enumerate(qual):
-    qual_ratings[p] = (user_avgs[point[0] - 1] + movie_avgs[point[1] - 1]) / 2
+    qual_ratings.append((user_avgs[point[0] - 1] + movie_avgs[point[1] - 1]) / 2)
 qual_ratings = np.array(qual_ratings, dtype=np.float32)
 
-np.savetxt('../data/qual_npavg.dta', qual, fmt='%.3f', newline='\n')
+np.savetxt('../data/qual_npavg.dta', qual_ratings, fmt='%.3f', newline='\n')
 print('finished!')
 
