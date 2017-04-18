@@ -33,5 +33,5 @@ def sp_mat_write(path='../data/', data=None):
 # read a cached scipy sparse UsersxMovies matrix of all the data
 def sp_mat_read(path='../data/'):
     data = sparse.load_npz(path + 'csc.npz')
-    print(' imported csc matrix[user, movie]:', data.shape, data.dtype)
+    print('imported csc matrix[user, movie]:', data.shape, data.dtype)
     return data

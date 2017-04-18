@@ -3,9 +3,9 @@ from cache import *
 data = np_read() #[user, movie, date, rating]
 data = data[data[:, 3] != 0]
 
-# this is vectorized method but requires an insane amount of memory
+# this is a vectorized method but requires an insane amount of memory:
 # a = ((np.mgrid[:np.max(data[:, 0]), :data.shape[0]] == data[:, 0])[0] * data[:, 3]).mean(axis=1)
-# use for loops instead
+# use a for loop instead:
 
 # get average rating for every user and movie
 num_points = data.shape[0]
