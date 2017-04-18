@@ -9,4 +9,4 @@ def np_write(path='../data/um/', name='all'):
     with open(path + name + '.dta') as f:
         data = [[int(x) for x in line.split()] for line in f.readlines()]
         data = np.array(data, dtype=np.uint32)
-        np.save(path + 'all', data)
+        np.save(path + name, data)
