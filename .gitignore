@@ -2,6 +2,7 @@
 *.zip
 *.dta
 *.idx
+*.npz
 submissions/
 .DS_Store
 
