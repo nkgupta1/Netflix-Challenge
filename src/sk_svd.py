@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from cache import *
 from sklearn.decomposition import TruncatedSVD
 import time

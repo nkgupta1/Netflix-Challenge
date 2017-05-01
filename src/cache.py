@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import numpy as np
 from scipy import sparse
 import os.path
@@ -46,3 +47,5 @@ def sp_mat_read(path='../data/'):
         csc = sparse.load_npz(fname)
     print('imported csc matrix[user, movie]:', csc.shape, csc.dtype)
     return csc
+
+sp_mat_write()

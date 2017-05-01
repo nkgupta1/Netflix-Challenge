@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from cache import *
 
 data = np_read() #[user, movie, date, rating]
