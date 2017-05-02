@@ -2,8 +2,10 @@
 *.zip
 *.dta
 *.idx
+*.npz
 submissions/
 data/
+models/
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
