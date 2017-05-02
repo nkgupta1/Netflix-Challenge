@@ -126,13 +126,13 @@ def train(Y, reg, eta, Y_test=None, save=True):
 
 if __name__ == '__main__':
 
-    '''
+    
     eta = .1   # step size
     reg = .1    # regularization strength
 
     remove_mean = True
 
-    etas = [0.1, 0.01, 0.005]
+    etas = [0.1, 0.01, 0.001]
     regs = [1, 0.1, 0.01]
 
     Y = create_Y()
@@ -151,13 +151,13 @@ if __name__ == '__main__':
     # Y_train = Y[:2*num_samples//3]
     # Y_test  = Y[2*num_samples//3:]
 
-    # Y_train = Y[num_samples//3:]
-    # Y_test  = Y[:num_samples//3]
+    Y_train = Y[num_samples//3:]
+    Y_test  = Y[:num_samples//3]
 
     train(Y, reg, eta)
-    # cross_validate(Y_train, Y_test, regs, etas)
-    '''
+    cross_validate(Y_train, Y_test, regs, etas)
+    
 
-    predictions(0.38203, 0.10000, 0.1000)
+    # predictions(0.38203, 0.10000, 0.1000)
 
     
