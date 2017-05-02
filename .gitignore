@@ -4,6 +4,7 @@
 *.idx
 *.npz
 submissions/
+data/
 models/
 .DS_Store
 
