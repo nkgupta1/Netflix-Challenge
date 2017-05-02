@@ -12,7 +12,7 @@ def write_arrs():
     print('reading all data')
     data = pandas.read_csv('../data/um/all.dta', sep=' ', dtype=np.uint32).values
     inds = pandas.read_csv('../data/um/all.idx', sep=' ', dtype=np.uint8).values[:, 0]
-    for i, name in cats.iteritems():
+    for i, name in cats.items():
         print('saving', name)
         np.save('../data/um/' + name, data[inds == i])
 
@@ -23,7 +23,7 @@ def read_arr(name):
 
 # UsersxMovies matrix
 def write_mats():
-    for i, name in cats.iteritems():
+    for i, name in cats.items():
         if name == 'qual':
             continue
         data = read_arr(name)
