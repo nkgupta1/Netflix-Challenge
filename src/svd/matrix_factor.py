@@ -2,13 +2,14 @@
 # creates and factors a matrix
 
 import numpy as np
+import time
 from prob2utils import train_model, get_err
 
 M = 458293     # number of users
 N = 17770      # number of movies
-K = 20         # number of latent factors
+K = 30         # number of latent factors
 
-def predictions(err, reg, eta, mean=3.5126):
+def predictions(err, reg, eta, mean=3.51259997602):
     '''
     generate list of predictions
     '''
@@ -98,6 +99,8 @@ def cross_validate(Y_train, Y_test, regs, etas):
 
     for reg in regs:
         for eta in etas:
+            start = time.time()
+
             U, V, a, b, _ = train(Y_train, reg, eta, Y_test=Y_test, save=False)
             errIn = get_err(U, V, a, b, Y_train, reg=0)
             errOut = get_err(U, V, a, b, Y_test, reg=0)
@@ -107,13 +110,14 @@ def cross_validate(Y_train, Y_test, regs, etas):
             output_str = '{}, eta = {:.4f}'.format(output_str, eta)
             output_str = '{}, errIn = {:.6f}'.format(output_str, errIn)
             print(output_str[2:])
+            print('{:5.0f}\n'.format(time.time() - start))
 
 def train(Y, reg, eta, Y_test=None, save=True):
     '''
     learns U, V, a, b
     '''
 
-    (U, V, a, b, err) = train_model(M, N, K, eta, reg, Y, Y_test=Y_test, eps=0.003)
+    (U, V, a, b, err) = train_model(M, N, K, eta, reg, Y, Y_test=Y_test, eps=0.005, max_epochs=20)
 
     if save:
         np.save('models/{:6.5f}-U-{:.5f}-{:.4f}'.format(err, reg, eta), U)
@@ -127,37 +131,37 @@ def train(Y, reg, eta, Y_test=None, save=True):
 if __name__ == '__main__':
 
     
-    eta = .1   # step size
-    reg = .1    # regularization strength
+    # reg = .1    # regularization strength
+    # eta = .01   # step size
 
-    remove_mean = True
+    # remove_mean = True
 
-    etas = [0.1, 0.01, 0.001]
-    regs = [1, 0.1, 0.01]
+    # regs = [1, 0.1, 0.01]
+    # etas = [0.1, 0.01, 0.001]
 
-    Y = create_Y()
+    # Y = create_Y()
 
-    if remove_mean:
-        Y_mean = Y.mean(axis=0)
-        # don't modify the id numbers
-        Y_mean[0] = 0
-        Y_mean[1] = 0
+    # if remove_mean:
+    #     Y_mean = Y.mean(axis=0)
+    #     # don't modify the id numbers
+    #     Y_mean[0] = 0
+    #     Y_mean[1] = 0
 
-        print("Remove mean out of Y: ", Y_mean[2])
+    #     print("Remove mean out of Y: ", Y_mean[2])
 
-        Y = Y - Y_mean
+    #     Y = Y - Y_mean
 
-    num_samples = len(Y)
-    # Y_train = Y[:2*num_samples//3]
-    # Y_test  = Y[2*num_samples//3:]
+    # num_samples = len(Y)
+    # # Y_train = Y[:2*num_samples//3]
+    # # Y_test  = Y[2*num_samples//3:]
 
-    Y_train = Y[num_samples//3:]
-    Y_test  = Y[:num_samples//3]
+    # # Y_train = Y[num_samples//3:]
+    # # Y_test  = Y[:num_samples//3]
 
-    train(Y, reg, eta)
-    cross_validate(Y_train, Y_test, regs, etas)
+    # train(Y, reg, eta)
+    # cross_validate(Y_train, Y_test, regs, etas)
     
 
-    # predictions(0.38203, 0.10000, 0.1000)
+    predictions(0.36929, 0.10000, 0.01000)
 
     
