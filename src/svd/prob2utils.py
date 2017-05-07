@@ -47,7 +47,7 @@ def get_err(U, V, a, b, Y, reg=0.0):
     # We first compute the total squared squared error
     err = 0.0
     for (i,j,Yij) in Y:
-        i,j = int(i),int(j)
+        i, j = int(i), int(j)
         err += 0.5 *(Yij - (np.dot(U[i-1], V[:,j-1]) + a[i-1] + b[j-1]))**2
     # Add error penalty due to regularization if regularization
     # parameter is nonzero
@@ -114,3 +114,4 @@ def train_model(M, N, K, eta, reg, Y, Y_test=None, eps=0.0001, max_epochs=300):
         elif before_E_in - E_in < eps * delta:
             break
     return (U, V, a, b, get_err(U, V, a, b, Y))
+    
