@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from cache import *
+from old_cache import *
 
 data = np_read() #[user, movie, date, rating]
 data = data[data[:, 3] != 0]
@@ -34,7 +34,7 @@ movie_avgs /= movie_counts
 
 # make predictions for data in qual
 print('making predictions on qual based on averages...')
-qual = np_read(name='qual')
+qual = read_arr('qual')
 qual_ratings = []
 for p, point in enumerate(qual):
     qual_ratings.append((user_avgs[point[0] - 1] + movie_avgs[point[1] - 1]) / 2)
