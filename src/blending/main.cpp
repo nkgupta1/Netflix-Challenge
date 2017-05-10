@@ -14,7 +14,10 @@ using namespace std;
 
 
 // command line argument: <string of qual.dta files delimited by space> <rmse delimited by space>
+// example: ./blending 'qual1.dta qual2.dta' '.987 .937'
 int main (int argc, char *argv[]) {
+    // will have to change manually (for now) for the number of points in the dataset
+    // qual.dta has 2749898
     int num_points = 10;
 
     // read in the ratings from input
