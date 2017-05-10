@@ -1,9 +1,6 @@
 //
 //  main.cpp
-//  read_data
 //
-//  Created by Skim on 5/8/17.
-//  Copyright © 2017 Seohyun Kim. All rights reserved.
 //
 
 #include <iostream>
@@ -16,7 +13,7 @@
 using namespace std;
 
 
-
+// command line argument: <string of qual.dta files delimited by space> <rmse delimited by space>
 int main (int argc, char *argv[]) {
     int num_points = 10;
 
