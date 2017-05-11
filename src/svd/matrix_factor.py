@@ -162,6 +162,6 @@ if __name__ == '__main__':
     # cross_validate(Y_train, Y_test, regs, etas)
     
 
-    predictions(0.36929, 0.10000, 0.01000)
+    predictions(0.38454, 0.10000, 0.01000)
 
     
