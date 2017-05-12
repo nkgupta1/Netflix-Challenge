@@ -71,10 +71,14 @@ void Processing::initialize(const string data, const string outname) {
     // Save the data file for future reference
     file = data;
 
+    ave = 3.6;
     // Generate data
-    global_average();
+    // global_average();
+    // printf("One down\n");
     user_average();
+    printf("Two done\n");
     movie_average();
+    printf("Three done\n");
 
     // Save to file
     save(outname);
@@ -273,6 +277,8 @@ void Processing::user_average() {
     ifstream infile2(file);
     ifstream infile3(file);
 
+    printf("Does this fail?\n");
+
     // Make three passes; first to count number of times a
     // user is seen, second to compute average, third for
     // stdev. Yes this could be faster, but it's fast enough 
@@ -280,13 +286,18 @@ void Processing::user_average() {
     while (infile1 >> u >> m >> d >> r) {
         counts[u-1]++;
     }
+    printf("This works...\n");
     while (infile2 >> u >> m >> d >> r) {
+        printf("%d\n", u);
         use_ave[u-1] += (float) r / counts[u-1];
     }
+    printf("This does too.\n");
     while (infile3 >> u >> m >> d >> r) {
         use_stdev[u-1] += pow((float) r - use_ave[u-1], (float) 2) 
                             / (counts[u-1] - 1);
     }
+
+    printf("Wat wat wat wat\n");
 
     // We now have the movie averages. Subtract off the overall
     // average.
@@ -310,7 +321,7 @@ void Processing::user_average() {
  * Generates about 6 gigabytes of files. 
  */
 int main() {
-    Processing::split("../../data/um/all.dta", "../../data/um/all.idx");
+    // Processing::split("../../data/um/all.dta", "../../data/um/all.idx");
     // printf("Split\n");
 
     // float ave = find_average("hashe_data/um/base_test.dta");
@@ -319,7 +330,7 @@ int main() {
     // float use_ave[U];
     // float use_stdev[U];
     // user_average("hashe_data/um/base_test.dta", &use_ave, 
-    //     &use_stdev, ave);
+        // &use_stdev, ave);
     // printf("%f\n", use_ave[0] + ave);
     // printf("User averages found\n");
 
@@ -340,10 +351,15 @@ int main() {
     // test.save("hashe_data/um/test2.txt");
     Processing test;
     test.initialize("../../data/um/base_all.dta", "../../data/um/process_obj.mat");
-    test.preprocess("../../data/um/base_all.dta", "../../data/um/base_processed.dta");
-    test.preprocess("../../data/um/valid_all.dta", "../../data/um/valid_processed.dta");
-    test.preprocess("../../data/um/hidden_all.dta", "../../data/um/hidden_processed.dta");
-    test.preprocess("../../data/um/probe_all.dta", "../../data/um/probe_processed.dta");
+    printf("Initialized\n");
+    // test.preprocess("../../data/um/base_all.dta", "../../data/um/base_processed.dta");
+    // printf("Processing base.\n");
+    // test.preprocess("../../data/um/valid_all.dta", "../../data/um/valid_processed.dta");
+    // printf("Processing valid.\n");
+    // test.preprocess("../../data/um/hidden_all.dta", "../../data/um/hidden_processed.dta");
+    // printf("Processing hidden.\n");
+    // test.preprocess("../../data/um/probe_all.dta", "../../data/um/probe_processed.dta");
+    // printf("Processing probe.\n");
     // test.unpreprocess("hashe_data/um/pro_base.dta", "hashe_data/um/unpro_base.dta");
     return 0;
 }

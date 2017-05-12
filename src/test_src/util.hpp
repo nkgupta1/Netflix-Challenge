@@ -6,8 +6,8 @@
 #include <sstream>
 #include <cstring>
 
-// #define U   458293      // Users
-#define U   23          // Users
+#define U   458293      // Users
+// #define U   23          // Users
 #define M   17770       // Movies
 // #define N   102416306   // Data Points
 #define N   4552        // Data Points in function testing set
