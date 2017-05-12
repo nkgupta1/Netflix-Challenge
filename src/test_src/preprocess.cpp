@@ -310,7 +310,7 @@ void Processing::user_average() {
  * Generates about 6 gigabytes of files. 
  */
 int main() {
-    // Processing::split("hashe_data/um/test.dta", "hashe_data/um/test.idx");
+    Processing::split("../../data/um/all.dta", "../../data/um/all.idx");
     // printf("Split\n");
 
     // float ave = find_average("hashe_data/um/base_test.dta");
@@ -339,8 +339,11 @@ int main() {
     // test.load("hashe_data/um/test.txt");
     // test.save("hashe_data/um/test2.txt");
     Processing test;
-    test.initialize("hashe_data/um/base_test.dta", "hashe_data/um/test.txt");
-    test.preprocess("hashe_data/um/base_test.dta", "hashe_data/um/pro_base.dta");
-    test.unpreprocess("hashe_data/um/pro_base.dta", "hashe_data/um/unpro_base.dta");
+    test.initialize("../../data/um/base_all.dta", "../../data/um/process_obj.mat");
+    test.preprocess("../../data/um/base_all.dta", "../../data/um/base_processed.dta");
+    test.preprocess("../../data/um/valid_all.dta", "../../data/um/valid_processed.dta");
+    test.preprocess("../../data/um/hidden_all.dta", "../../data/um/hidden_processed.dta");
+    test.preprocess("../../data/um/probe_all.dta", "../../data/um/probe_processed.dta");
+    // test.unpreprocess("hashe_data/um/pro_base.dta", "hashe_data/um/unpro_base.dta");
     return 0;
 }
