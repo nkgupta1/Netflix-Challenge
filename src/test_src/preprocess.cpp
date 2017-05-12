@@ -71,14 +71,10 @@ void Processing::initialize(const string data, const string outname) {
     // Save the data file for future reference
     file = data;
 
-    ave = 3.6;
     // Generate data
-    // global_average();
-    // printf("One down\n");
+    global_average();
     user_average();
-    printf("Two done\n");
     movie_average();
-    printf("Three done\n");
 
     // Save to file
     save(outname);
@@ -315,7 +311,7 @@ void Processing::user_average() {
  */
 int main() {
     Processing::split("../../data/um/all.dta", "../../data/um/all.idx");
-    printf("Split\n");
+    printf("Dataset split\n");
 
     // float ave = find_average("hashe_data/um/base_test.dta");
     // printf("Average: %f\n", ave);
