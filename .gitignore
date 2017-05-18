@@ -3,6 +3,8 @@
 *.dta
 *.idx
 *.npz
+*.mat
+*.o
 submissions/
 data/
 models/
