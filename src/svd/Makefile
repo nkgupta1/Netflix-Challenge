@@ -1,10 +1,23 @@
-# Use the GNU compiler gcc
+CC          = g++
+OPTIMIZE    = -O2
+OBJS        = svd.o
 
-all: svd
+# For performance testing:
+CFLAGS      = -Wall -DNDEBUG -ansi -pedantic -std=c++11 $(OPTIMIZE)
 
-svd: svd.cpp
-	g++ -g svd.cpp -o svd
+# For debugging:
+# CFLAGS 		= -Wall -ggdb -O0 -DDEBUG_ZERO
+
+all: clean svd
+
+svd: svd.o
+	$(CC) -o $@ $^
+
+
+%.o: %.cpp
+	$(CC) -c $(CFLAGS) -x c++ $< -o $@
 
 clean:
-	rm -f svd
+	rm -f *.o svd
 
+.PHONY: all clean
