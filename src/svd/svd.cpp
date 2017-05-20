@@ -1,8 +1,6 @@
 
 #include "svd.hpp"
 
-using namespace std;
-
 float dot_product(float **U, int i, float **V, int j) {
     /*
      * Takes the dot product of 2 rows of U and V.
@@ -69,8 +67,8 @@ float get_err(float **U, float **V, float **Y, int num_pts, float reg) {
 
 
 
-svd_data* train_model(float eta, float reg, float **Y, float eps,
-                      int max_epochs) {
+svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
+                      float eps, int max_epochs) {    
     /*
      * Train an SVD model using SGD.
      *
@@ -121,7 +119,7 @@ svd_data* train_model(float eta, float reg, float **Y, float eps,
     toRet->U = U;
     toRet->V = V;
 
-    printf("done creating matrices\n\n");
+    printf("done creating matrices...\n\n");
 
     // so we can randomly go over all the points
     // int *indicies = new int[NUM_PTS];
@@ -134,19 +132,21 @@ svd_data* train_model(float eta, float reg, float **Y, float eps,
     float delta = 0.0;
     int i, j, date, Yij;
     float dot_prod;
-    float before_E_in, E_in;
+    float before_E_in, E_in, E_out;
+
+    printf("starting training....\n");
 
     for (int epoch = 0; epoch < max_epochs; epoch++) {
-        before_E_in = get_err(U, V, Y, NUM_PTS, 0);
+        before_E_in = get_err(U, V, Y_train, NUM_TRAIN_PTS, 0);
 
         // takes 9 seconds
-        // random_shuffle(&indicies[0], &indicies[NUM_PTS-1]);
+        // random_shuffle(&indicies[0], &indicies[NUM_TRAIN_PTS-1]);
 
-        for (int ind = 0; ind < NUM_PTS; ind++) {
-            i    = Y[ind][0];
-            j    = Y[ind][1];
-            date = Y[ind][2];
-            Yij  = Y[ind][3];
+        for (int ind = 0; ind < NUM_TRAIN_PTS; ind++) {
+            i    = Y_train[ind][0];
+            j    = Y_train[ind][1];
+            date = Y_train[ind][2];
+            Yij  = Y_train[ind][3];
 
             // so compiler doesn't generate warnings
             (void)date;
@@ -166,11 +166,12 @@ svd_data* train_model(float eta, float reg, float **Y, float eps,
         }
 
         // get the error for the epoch
-        E_in = get_err(U, V, Y, NUM_PTS, 0);
-        printf("%f\n", E_in);
+        E_in  = get_err(U, V, Y_train, NUM_TRAIN_PTS, 0);
+        E_out = get_err(U, V, Y_train, NUM_TRAIN_PTS, 0);
+        printf("iteration %3d:\tE_in: %1.5f\tE_out: %1.5f\n", epoch, E_in, E_out);
 
-        if (epoch % 1 == 0) {
-            save_matrices(toRet, E_in, eta, reg, max_epochs);
+        if (epoch % 10 == 0) {
+            save_matrices(toRet, E_in, eta, reg, epoch);
         }
 
         // check termination condition
@@ -181,6 +182,8 @@ svd_data* train_model(float eta, float reg, float **Y, float eps,
         }
 
     }
+
+    printf("finished training...\n\n");
 
 
     // clean up
@@ -197,6 +200,8 @@ float **read_data(const string file, int num_pts) {
      *     user, movie, date, rating
      *     user, movie, date, rating
      */
+    
+    printf("reading in data...\n");
     
     // preallocate array
     float ** Y = new float*[num_pts];
@@ -216,7 +221,7 @@ float **read_data(const string file, int num_pts) {
         Y[i][3] = r;
     }
     datafile.close();
-    printf("done reading in data\n");
+    printf("done reading in data...\n\n");
     return Y;
 }
 
@@ -226,7 +231,7 @@ void save_matrices(svd_data *data, float err, float eta, float reg, int max_epoc
      * later. Uses a standard format based on the parameters used for training.
      */
     
-    printf("saving data...\n");
+    // printf("saving data...");
 
     // generate file names
     string file_base = "models/" + to_string(err) + "_" + to_string(K) + "_" +
@@ -272,9 +277,11 @@ void predict(svd_data *data, float err, float eta, float reg, int max_epochs) {
      * them using a standard format.
      */
     
+    printf("prediciting data...\n");
+    
     // read in the test data
     float **Y;
-    Y = read_data("../../data/um/qual_all.dta", QUAL_NUM);
+    Y = read_data("../../data/um/qual_all.dta", NUM_QUAL_PTS);
 
     // create filename
     string pred_name = "predictions/" + to_string(err) + "_" + to_string(K) +
@@ -285,7 +292,7 @@ void predict(svd_data *data, float err, float eta, float reg, int max_epochs) {
 
     // generate and output predictions
     float pred = 0.;
-    for (int ind = 0; ind < QUAL_NUM; ind++) {
+    for (int ind = 0; ind < NUM_QUAL_PTS; ind++) {
         pred = dot_product(data->U, Y[ind][0] - 1, data->V, Y[ind][1] - 1);
         if (pred < 1)
             pred = 1;
@@ -297,6 +304,7 @@ void predict(svd_data *data, float err, float eta, float reg, int max_epochs) {
     // clean up
     ofs.close();
 
+    printf("done predicting data...\n\n");
 
 }
 
@@ -305,22 +313,27 @@ int main(int argc, char **argv) {
 
     // training parameters
     float eta = 0.001;
-    float reg = 0.05;
-    float eps = 0.0001;
-    int max_epochs = 500;
+    float reg = 0.01;
+    float eps = 0.00001;
+    int max_epochs = 100;
 
     
     // read in the training data
-    float **Y;
-    Y = read_data("../../data/um/base_all.dta", NUM_PTS);
+    float **Y_train;
+    Y_train = read_data("../../data/um/base_all.dta", NUM_TRAIN_PTS);
+
+    // read in the test data
+    float **Y_test;
+    Y_test = read_data("../../data/um/valid_all.dta", NUM_TRAIN_PTS);
+
 
 
     // and now train!
     svd_data *matrices;
-    matrices = train_model(eta, reg, Y, eps, max_epochs);
+    matrices = train_model(eta, reg, Y_train, Y_test, eps, max_epochs);
 
     // get the in-sample error
-    float err = get_err(matrices->U, matrices->V, Y, NUM_PTS, 0);
+    float err = get_err(matrices->U, matrices->V, Y_train, NUM_TRAIN_PTS, 0);
 
     // save the matrices
     save_matrices(matrices, err, eta, reg, max_epochs);
@@ -330,10 +343,10 @@ int main(int argc, char **argv) {
 
 
     // CLEAN UP
-    for (int i = 0; i < NUM_PTS; i++) {
-        delete Y[i];
+    for (int i = 0; i < NUM_TRAIN_PTS; i++) {
+        delete Y_train[i];
     }
-    delete[] Y;
+    delete[] Y_train;
 
     return 0;
 }

@@ -8,10 +8,11 @@
 
 #define M 458293    // number of users
 #define N 17770     // number of movies
-#define K 30        // number of latent factors
+#define K 50        // number of latent factors
 
-#define NUM_PTS  94362233   // number of ratings
-#define QUAL_NUM 2749898    // number of qual points
+#define NUM_TRAIN_PTS  94362233   // number of ratings
+#define NUM_TEST_PTS   1965045    // number of ratings
+#define NUM_QUAL_PTS   2749898    // number of qual points
 
 using namespace std;
 
