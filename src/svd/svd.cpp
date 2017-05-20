@@ -1,6 +1,8 @@
 
 #include "svd.hpp"
 
+using namespace std;
+
 float dot_product(float **U, int i, float **V, int j) {
     /*
      * Takes the dot product of 2 rows of U and V.
@@ -133,6 +135,10 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
     int i, j, date, Yij;
     float dot_prod;
     float before_E_in, E_in, E_out;
+    float min_E_out = 100;
+    // this variable contains the number of times that E_out has consecutively
+    // gone up
+    int count_E_out_up = 0;
 
     printf("starting training....\n");
 
@@ -167,11 +173,18 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
 
         // get the error for the epoch
         E_in  = get_err(U, V, Y_train, NUM_TRAIN_PTS, 0);
-        E_out = get_err(U, V, Y_train, NUM_TRAIN_PTS, 0);
+        E_out = get_err(U, V, Y_test, NUM_TEST_PTS, 0);
         printf("iteration %3d:\tE_in: %1.5f\tE_out: %1.5f\n", epoch, E_in, E_out);
 
-        if (epoch % 10 == 0) {
-            save_matrices(toRet, E_in, eta, reg, epoch);
+        if (E_out < min_E_out) {
+            min_E_out = E_out;
+            count_E_out_up = 0;
+            save_matrices(toRet, E_out, eta, reg, epoch);
+        } else {
+            count_E_out_up++;
+            if (count_E_out_up > 4) {
+                break;
+            }
         }
 
         // check termination condition
@@ -263,12 +276,45 @@ void save_matrices(svd_data *data, float err, float eta, float reg, int max_epoc
     printf("saved data...\n");
 }
 
-svd_data* load_matrices(const string fbase) {
+svd_data* load_matrices(const string file_base) {
     /*
      * Loads the user and movie matrices from the file name base and returns
      * them.
      */
-    return NULL;
+    ifstream u_file(file_base + "_u.mat");
+    ifstream v_file(file_base + "_v.mat");
+
+    float ** U = new float*[M];
+    for (int i = 0; i < M; i++) {
+        U[i] = new float[K];
+    }
+
+    float ** V = new float*[N];
+    for (int i = 0; i < N; i++) {
+        V[i] = new float[K];
+    }
+
+    svd_data *toRet = (svd_data*)malloc(sizeof(svd_data));
+    toRet->U = U;
+    toRet->V = V;
+
+    // populate with random values
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < K; j++) {
+            u_file >> U[i][j];
+        }
+    }
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < K; j++) {
+            v_file >> V[i][j];
+        }
+    }
+
+    u_file.close();
+    v_file.close();
+
+    return toRet;
 }
 
 void predict(svd_data *data, float err, float eta, float reg, int max_epochs) {
@@ -315,7 +361,10 @@ int main(int argc, char **argv) {
     float eta = 0.001;
     float reg = 0.01;
     float eps = 0.00001;
-    int max_epochs = 100;
+    int max_epochs = 20;
+
+    printf("eta: %f\nreg: %f\neps: %f\nepochs: %d\nlatent factors: %d\n\n",
+            eta, reg, eps, max_epochs, K);
 
     
     // read in the training data
@@ -324,7 +373,7 @@ int main(int argc, char **argv) {
 
     // read in the test data
     float **Y_test;
-    Y_test = read_data("../../data/um/valid_all.dta", NUM_TRAIN_PTS);
+    Y_test = read_data("../../data/um/valid_all.dta", NUM_TEST_PTS);
 
 
 
@@ -332,8 +381,12 @@ int main(int argc, char **argv) {
     svd_data *matrices;
     matrices = train_model(eta, reg, Y_train, Y_test, eps, max_epochs);
 
-    // get the in-sample error
-    float err = get_err(matrices->U, matrices->V, Y_train, NUM_TRAIN_PTS, 0);
+    // load matrices
+    // matrices = load_matrices("models/0.921953_50_0.001000_0.010000_9");
+
+    // get the out-sample error
+    float err = get_err(matrices->U, matrices->V, Y_test, NUM_TEST_PTS, 0);
+    printf("%f\n", err);
 
     // save the matrices
     save_matrices(matrices, err, eta, reg, max_epochs);
@@ -343,10 +396,17 @@ int main(int argc, char **argv) {
 
 
     // CLEAN UP
-    for (int i = 0; i < NUM_TRAIN_PTS; i++) {
-        delete Y_train[i];
-    }
-    delete[] Y_train;
+    // for (int i = 0; i < NUM_TRAIN_PTS; i++) {
+    //     delete Y_train[i];
+    // }
+    // delete[] Y_train;
+
+    // for (int i = 0; i < NUM_TEST_PTS; i++) {
+    //     delete Y_test[i];
+    // }
+    // delete[] Y_test;
+
+    // should clean up U and V too....
 
     return 0;
 }

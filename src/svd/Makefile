@@ -6,7 +6,7 @@ OBJS        = svd.o
 CFLAGS      = -Wall -DNDEBUG -ansi -pedantic -std=c++11 $(OPTIMIZE)
 
 # For debugging:
-# CFLAGS 		= -Wall -ggdb -O0 -DDEBUG_ZERO
+# CFLAGS 		= -Wall -ggdb -O0 -DDEBUG_ZERO -std=c++11
 
 all: clean svd
 

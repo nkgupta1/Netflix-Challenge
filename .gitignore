@@ -1,3 +1,11 @@
+# C++ ignores
+*.o
+*.exe
+*.out
+*.dll
+*.so
+*.obj
+
 # user
 *.zip
 *.dta
