@@ -1,12 +1,4 @@
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <algorithm>
-#include <time.h>
-#include <cmath>
-#include <fstream>
-
 #include "svd.hpp"
 
 using namespace std;
@@ -94,6 +86,8 @@ svd_data* train_model(float eta, float reg, float **Y, float eps,
     
     srand(time(NULL));
 
+
+
     float ** U = new float*[M];
     for (int i = 0; i < M; i++) {
         U[i] = new float[K];
@@ -123,13 +117,17 @@ svd_data* train_model(float eta, float reg, float **Y, float eps,
         }
     }
 
-    printf("done creating matricies\n\n");
+    svd_data *toRet = (svd_data*)malloc(sizeof(svd_data));
+    toRet->U = U;
+    toRet->V = V;
+
+    printf("done creating matrices\n\n");
 
     // so we can randomly go over all the points
-    int *indicies = new int[NUM_PTS];
-    for (int i = 0; i < NUM_PTS; i++) {
-        indicies[i] = i;
-    }
+    // int *indicies = new int[NUM_PTS];
+    // for (int i = 0; i < NUM_PTS; i++) {
+    //     indicies[i] = i;
+    // }
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -150,6 +148,7 @@ svd_data* train_model(float eta, float reg, float **Y, float eps,
             date = Y[ind][2];
             Yij  = Y[ind][3];
 
+            // so compiler doesn't generate warnings
             (void)date;
 
             dot_prod = dot_product(U, i-1, V, j-1);
@@ -165,9 +164,16 @@ svd_data* train_model(float eta, float reg, float **Y, float eps,
             }
 
         }
+
+        // get the error for the epoch
         E_in = get_err(U, V, Y, NUM_PTS, 0);
         printf("%f\n", E_in);
 
+        if (epoch % 1 == 0) {
+            save_matrices(toRet, E_in, eta, reg, max_epochs);
+        }
+
+        // check termination condition
         if (epoch == 0) {
             delta = before_E_in - E_in;
         } else if (before_E_in - E_in < eps * delta) {
@@ -176,21 +182,32 @@ svd_data* train_model(float eta, float reg, float **Y, float eps,
 
     }
 
-    svd_data *toRet = (svd_data*)malloc(sizeof(svd_data));
-    toRet->U = U;
-    toRet->V = V;
 
     // clean up
-    delete[] indicies;
+    // delete[] indicies;
 
     return toRet;
 
 }
 
-float **read_data(const string file, float **Y) {
+float **read_data(const string file, int num_pts) {
+    /*
+     * Read in data for training or test.
+     * In format:
+     *     user, movie, date, rating
+     *     user, movie, date, rating
+     */
+    
+    // preallocate array
+    float ** Y = new float*[num_pts];
+    for (int i = 0; i < num_pts; i++) {
+        Y[i] = new float[4];
+    }
+
+    // read in the data
     ifstream datafile(file);
     float u, m, d, r;
-    for (int i = 0; i < NUM_PTS; i++) {
+    for (int i = 0; i < num_pts; i++) {
         datafile >> u >> m >> d >> r;
 
         Y[i][0] = u;
@@ -198,27 +215,121 @@ float **read_data(const string file, float **Y) {
         Y[i][2] = d;
         Y[i][3] = r;
     }
+    datafile.close();
     printf("done reading in data\n");
+    return Y;
+}
+
+void save_matrices(svd_data *data, float err, float eta, float reg, int max_epochs) {
+    /*
+     * Save the matrices so we can keep a history or continue training them
+     * later. Uses a standard format based on the parameters used for training.
+     */
+    
+    printf("saving data...\n");
+
+    // generate file names
+    string file_base = "models/" + to_string(err) + "_" + to_string(K) + "_" +
+                       to_string(eta) + "_" + to_string(reg) + "_" +
+                       to_string(max_epochs);
+
+    ofstream u_file(file_base + "_u.mat");
+    ofstream v_file(file_base + "_v.mat");
+
+    // save the user matrix
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < K; j++) {
+            u_file << data->U[i][j] << " ";
+        }
+        u_file << "\n";
+    }
+
+    // save the movie matrix
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < K; j++) {
+            v_file << data->V[i][j] << " ";
+        }
+        v_file << "\n";
+    }
+
+    // clean up
+    u_file.close();
+    v_file.close();
+    printf("saved data...\n");
+}
+
+svd_data* load_matrices(const string fbase) {
+    /*
+     * Loads the user and movie matrices from the file name base and returns
+     * them.
+     */
+    return NULL;
+}
+
+void predict(svd_data *data, float err, float eta, float reg, int max_epochs) {
+    /*
+     * Given the matrices and their parameters, creates predictions and saves
+     * them using a standard format.
+     */
+    
+    // read in the test data
+    float **Y;
+    Y = read_data("../../data/um/qual_all.dta", QUAL_NUM);
+
+    // create filename
+    string pred_name = "predictions/" + to_string(err) + "_" + to_string(K) +
+                       "_" + to_string(eta) + "_" + to_string(reg) + "_" +
+                       to_string(max_epochs) + "_pred.txt";
+
+    ofstream ofs(pred_name);
+
+    // generate and output predictions
+    float pred = 0.;
+    for (int ind = 0; ind < QUAL_NUM; ind++) {
+        pred = dot_product(data->U, Y[ind][0] - 1, data->V, Y[ind][1] - 1);
+        if (pred < 1)
+            pred = 1;
+        if (pred > 5)
+            pred = 5;
+        ofs << pred << "\n";
+    }
+
+    // clean up
+    ofs.close();
+
+
 }
 
 
 int main(int argc, char **argv) {
 
+    // training parameters
     float eta = 0.001;
-    float reg = 0.01;
+    float reg = 0.05;
     float eps = 0.0001;
-    int max_epochs = 20;
+    int max_epochs = 500;
 
-    float ** Y = new float*[NUM_PTS];
-    for (int i = 0; i < NUM_PTS; i++) {
-        Y[i] = new float[4];
-    }
-
-    read_data("../../data/um/base_all.dta", Y);
+    
+    // read in the training data
+    float **Y;
+    Y = read_data("../../data/um/base_all.dta", NUM_PTS);
 
 
-    train_model(eta, reg, Y, eps, max_epochs);
+    // and now train!
+    svd_data *matrices;
+    matrices = train_model(eta, reg, Y, eps, max_epochs);
 
+    // get the in-sample error
+    float err = get_err(matrices->U, matrices->V, Y, NUM_PTS, 0);
+
+    // save the matrices
+    save_matrices(matrices, err, eta, reg, max_epochs);
+
+    // make predictions
+    predict(matrices, err, eta, reg, max_epochs);
+
+
+    // CLEAN UP
     for (int i = 0; i < NUM_PTS; i++) {
         delete Y[i];
     }
