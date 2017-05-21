@@ -348,14 +348,14 @@ void RBM::train(int start, int stop, int steps) {
     for (int i = 0; i < V; i++) {
         for (int j = 0; j < F; j++) {
             for (int k = 0; k < K; k++) {
-                W[i][j][k] += del_W[i][j][k];
+                W[i][j][k] += (del_W[i][j][k]/(stop-start+1));
             }
         }
     }
     // Visible biases
     for (int i = 0; i < V; i++) {
         for (int j = 0; j < K; j++) {
-            vis_bias[i][j] += del_vis_bias[i][j];
+            vis_bias[i][j] += (del_vis_bias[i][j]/(stop-start+1));
         }
     }
     // Hidden biases
@@ -429,10 +429,11 @@ void RBM::forward(float **input, float *hidden, int num_mov, bool dis) {
 // Input <- Hidden
 void RBM::backward(float **input, float *hidden, int num_mov, bool dis) {
     int i, j, k, mov;
-    float sum, prob;
+    float sum, prob, norm;
     // Calculate score for each visible element
     for (j = 0; j < num_mov; j++) {
         mov = (int) input[j][0];
+        norm = 0;
         for (k = 1; k <= 5; k++) {
             sum = 0;
             for (i = 0; i < F; i++) {
@@ -450,6 +451,11 @@ void RBM::backward(float **input, float *hidden, int num_mov, bool dis) {
             } else {
                 input[j][k] = prob;
             }
+            norm += prob;
+        }
+
+        for (k = 1; k <= 5; k++) {
+            input[j][k] /= norm;
         }
     }
 }
@@ -590,6 +596,7 @@ RBM::RBM(const string file, int hidden, float learning_rate,
     // Create the RBM
     printf("Creating RBM...\n");
     RBM rbm = RBM(file, hidden, learning_rate);
+    // RBM rbm = RBM(save_name);
     printf("RBM Created.\n");
 
     for (i = 0; i < full_iters; i++) {
@@ -609,20 +616,22 @@ RBM::RBM(const string file, int hidden, float learning_rate,
             }
             // Every 150000, save progress
             if ((((j+1)*100) % 150000 == 0) && (((j+1)*100) != 450000)) {
-                printf("    Saving...\n");
+                printf("    Printing and saving...\n");
+                rbm.eps /= 2;
                 rbm.save(save_name);
-                // rbm.predict(fname,outname,1,U);
-                printf("    Saved.\n");
+                rbm.predict(fname,outname,1,U);
+                printf("    Printed and saved.\n");
             }
         }
         // Train on last few examples
         rbm.train(458201,458293,cd_steps);
         printf("    458293/458293 completed.\n");
-        printf("    Printing sand saving...\n");
+        printf("    Printing and saving...\n");
+
+        rbm.eps /= 2;
         rbm.save(save_name);
         rbm.predict(fname,outname,1,U);
         printf("    Printed and saved.\n");
-
     }
     printf("All done!\n");
 }
@@ -633,8 +642,8 @@ int main() {
 
     // RBM f = RBM("../../data/um/base_all.dta", 100, 0.01);
     // f.predict("../../data/um/qual_all.dta", "../../data/um/rbm_preds.dta",1,U);
-    RBM("../../data/um/base_all.dta", 200, 0.01, "../../data/um/qual_all.dta", 
-        "../../data/um/rbm_preds.dta", "rbm.mat", 10, 3);
+    RBM("../../data/um/base_all.dta", 200, 1, "../../data/um/qual_all.dta", 
+        "../../data/um/rbm_preds3.dta", "rbm3.mat", 10, 3);
     // RBM rbm = RBM("rbm.mat");
     // printf("Loaded.\n");
     // rbm.predict("../../data/um/qual_all.dta", "../../data/um/rbm_preds.dta");
