@@ -52,7 +52,11 @@ void hash_info(string file, vector<double> (*hash_map));
 void get_top_q(vector<double> (*hash_map), int (*top_q));
 
 // calculate the pearson coefficient between two users (essentially the covariance level)
+//double calc_pearson(int user1, int user2, vector<double> *user1_movies, vector<double> *user2_movies);
 double calc_pearson(int user1, int user2, vector<double> *user1_movies, vector<double> *user2_movies);
+//double calc_pearson(int user1, int user2, double *user1_movies, double *user2_movies);
+
+
 
 //void hash_pearson( string pearsonsfile, vector<double>* users_pearson);
 

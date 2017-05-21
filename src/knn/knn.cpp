@@ -4,6 +4,7 @@ void hash_info(string file, vector<double> *hash_map) {
     ifstream infile(file);
     double user, movie, date, rating;
 
+    //for (int i = 0; i < 10000; i++) {
     for (int i = 0; i < N; i++) {
         if (infile >> user >> movie >> date >> rating) {
             hash_map[(int)user].push_back(movie);
@@ -13,7 +14,6 @@ void hash_info(string file, vector<double> *hash_map) {
             break;
         }
     }
-
 }
 
 
@@ -43,7 +43,7 @@ double calc_pearson(int user1, int user2, vector<double> *user1_movies, vector<d
     while ((it1 < (int)(*user1_movies).size()-1) && (it2 < (int)(*user2_movies).size()-1))
     {
         // case 1: common movie
-        if (user1_movies[it1] == user2_movies[it2]) {
+        if ((*user1_movies)[it1] == (*user2_movies)[it2]) {
             user1_ratings.push_back((*user1_movies)[it1+1]);
             user2_ratings.push_back((*user2_movies)[it2+1]);
             it1+=2;
@@ -51,13 +51,12 @@ double calc_pearson(int user1, int user2, vector<double> *user1_movies, vector<d
         }
 
         //case 2: it1 > it2. so move it2 forward
-        else if (user1_movies[it1] > user2_movies[it2])
+        else if ((*user1_movies)[it1] > (*user2_movies)[it2])
             it2+=2;
 
         //case 3: it1 < it2, so move it1 forward
         else
             it1+=2;
-
     }
 
     // 2. calculate covariance, variance of movie ratings
@@ -92,19 +91,17 @@ double calc_pearson(int user1, int user2, vector<double> *user1_movies, vector<d
 
 double compute_rating(int userId, int movieId, vector<double> *user_info, int* top_q, int num_neighbors)
 {
-
     // 1. Find all users that have watched movieId. if user2 has watched movieId, compute pearson coefficient
     vector<double> pearsons;
     for (int i = 0; i < Q; i++) {
         if (top_q[i] == userId) 
             continue;
-
         vector<double> current_list = user_info[top_q[i]];
         //index carries the pointer to the movie rating in current_list for user_info[top_q[i]]
         vector<double>::iterator index = find(current_list.begin(), current_list.end(), movieId);
         if (index != current_list.end()) {
             int index2 = (int) (index - current_list.begin());
-            double p = calc_pearson(userId, top_q[i], &(user_info)[userId], &(user_info)[top_q[i]]);
+            double p = calc_pearson(userId, top_q[i], &user_info[userId], &user_info[top_q[i]]);
             // pearson[i], [i+1], [i+2] = pearson coef, userid, movie rating for movieId
             pearsons.push_back((p+1)/2); //person coef
             pearsons.push_back((double)top_q[i]); //userID
@@ -118,14 +115,14 @@ double compute_rating(int userId, int movieId, vector<double> *user_info, int* t
 
     // 2. find k largest pearson coefficients and corresponding users
     priority_queue<pair<double, double>> q;
-    for (int i = 0; i < min(num_neighbors, (int)pearsons.size()/3); i+=3) {
+    int size = min(num_neighbors, (int)pearsons.size()/3);
+    for (int i = 0; i < size * 3; i+=3) {
         q.push(pair<double, double>(pearsons[i], pearsons[i+2]));
     }
 
     vector<double> neighbor_ratings;
-    for (int i = 1; i <= (int)pearsons.size()/3; i++) {
-        double neighbor_rate = q.top().second;
-        neighbor_ratings.push_back(neighbor_rate);
+    for (int i = 0; i < size; i++) {
+        neighbor_ratings.push_back(q.top().second);
         q.pop();
     }
 

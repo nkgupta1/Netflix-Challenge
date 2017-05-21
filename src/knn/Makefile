@@ -1,6 +1,7 @@
 CC          = g++
 OPTIMIZE    = -O2
-CFLAGS      = -Wall -g -ansi -pedantic -ggdb -std=c++11 $(OPTIMIZE)
+#CFLAGS      = -Wall -g -ansi -pedantic -ggdb -std=c++11 $(OPTIMIZE)
+CFLAGS      = -Wall -g -ansi -pedantic -ggdb -std=c++11
 OBJS        = knn.o
 
 all: clean knn_main
