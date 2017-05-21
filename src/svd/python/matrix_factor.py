@@ -24,24 +24,23 @@ def predictions(err, reg, eta, mean=3.51259997602):
     print('done loading data')
 
     with open('../../data/um/qual.dta') as f1:
-        with open('../../data/submissions/svd-5-epochs-{:6.5f}-{:.5f}-{:.4f}.txt'.format(err, reg, eta), 'w') as f2:
-            for line in f1:
-                lst = line.split()
+        for line in f1:
+            lst = line.split()
 
-                if len(lst) == 0:
-                    continue
+            if len(lst) == 0:
+                continue
 
-                user = int(lst[0]) - 1 # Zero-indexing
-                movie = int(lst[1]) - 1 # Zero-indexing
-
-                pred = np.dot(U[user-1], V[:,movie-1]) + a[user-1] + b[movie-1] + mean
-
-                if pred < 1:
-                    pred = 1
-                if pred > 5:
-                    pred = 5
-
-                f2.write(str(pred) + '\n')
+            user = int(lst[0]) - 1 # Zero-indexing
+            movie = int(lst[1]) - 1 # Zero-indexing
+            print('\n\n\n\n', user, movie, U[0], V[:, 78], a[0], b[78], mean)
+            print(np.dot(U[0], V[:, 210]))
+            print('h', np.dot(U[0], V[:, 210]) + a[0] + b[210] + mean)
+            quit()
+            pred = np.dot(U[user-1], V[:,movie-1]) + a[user-1] + b[movie-1] + mean
+            if pred < 1:
+                pred = 1
+            if pred > 5:
+                pred = 5
 
 
 def create_Y():
@@ -162,6 +161,6 @@ if __name__ == '__main__':
     # cross_validate(Y_train, Y_test, regs, etas)
     
 
-    predictions(0.38454, 0.10000, 0.01000)
+    predictions(0.36929, 0.10000, 0.01000)
 
     

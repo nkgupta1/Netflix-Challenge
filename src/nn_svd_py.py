@@ -9,7 +9,7 @@ from keras.layers.core import Dense
 
 
 class NN:
-    def __init__(self, a, b, u, v, mode='train', epochs=100, layer1=128, layer2=None):
+    def __init__(self, a, b, u, v, mode='svd', epochs=100, layer1=128, layer2=None):
         # users are rows of u. movies are columns of v.
         # a is bias of all users. b is bias of all movies.
         self.data_mean = 3.60860891887339
@@ -31,6 +31,9 @@ class NN:
             self.train()
             self.save_model()
             self.predict()
+        elif mode == 'svd':
+            self.read_data(a, b, u, v, read_training=True)
+            self.get_svd_rmse()
 
 
     def read_data(self, a, b, u, v, read_training):
@@ -58,7 +61,7 @@ class NN:
     def preprocess_data(self, data):
         ij = (data[:, :2] - 1) # make the data zero indexed
         if data.shape[1] == 4:
-            ratings = (data[:, 3].astype(np.float32) - self.data_mean)
+            ratings = (data[:, 3].astype(np.float32)- self.data_mean)
             ratings -= self.a[ij[:, 0]]
             ratings -= self.b[ij[:, 1]]
             ratings = np.expand_dims(ratings, axis=1)
@@ -132,6 +135,29 @@ class NN:
         print('saving predictions...', qual_ratings.shape)
         np.savetxt('../data/' + save_name + '.dta', qual_ratings, fmt='%.3f', newline='\n')
         print('finished!')
+
+
+    def get_svd_rmse(self):
+        print('getting svd training rmse...')
+        # get training rmse
+        rmse_avg = []
+        for block in range(0, self.num_blocks):
+            ij = self.blocks_ij[block]
+            prediction = np.sum(self.u[ij[:, 0]] * self.v[ij[:, 1]], axis=1)
+            ratings = self.blocks_ratings[block][:, 0]
+            print(self.u.shape, self.v.shape, ij[:10, 0])
+            print(ij[:10], self.u[ij[:10, 0]], self.v[ij[:10, 1]]) 
+            print(ratings[:10]) # -2.55887055
+            print(prediction[:10])
+            quit()
+            print(prediction, ratings)
+            rmse = np.sqrt(np.mean((prediction - ratings) ** 2))
+            print('rmse', rmse)
+            rmse_avg.append(rmse)
+        print('avg rmse', np.mean(rmse_avg))
+        # generate submisison for validation rmse
+        # self.model = predictor
+        # self.predict()
 
 
 

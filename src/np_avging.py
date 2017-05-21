@@ -36,7 +36,7 @@ movie_avgs /= movie_counts
 print('making predictions on qual based on averages...')
 qual = read_arr('qual')
 qual_ratings = []
-for p, point in enumerate(qual):
+for point in qual:
     qual_ratings.append((user_avgs[point[0] - 1] + movie_avgs[point[1] - 1]) / 2)
 qual_ratings = np.array(qual_ratings, dtype=np.float32)
 

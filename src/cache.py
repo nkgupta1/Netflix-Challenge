@@ -11,8 +11,10 @@ cats = {1: 'base', 2: 'valid', 3: 'hidden', 4: 'probe', 5: 'qual'}
 # save cached arrays of all the data as seperate categories given in cats
 def write_arrs():
     print('reading all data')
-    data = pandas.read_csv('../data/um/all.dta', sep=' ', dtype=np.uint32).values
-    inds = pandas.read_csv('../data/um/all.idx', sep=' ', dtype=np.uint8).values[:, 0]
+    data = pandas.read_csv('../data/um/all.dta', header=None, sep=' ', 
+        dtype=np.uint32).values
+    inds = pandas.read_csv('../data/um/all.idx', header=None, sep=' ', 
+        dtype=np.uint8).values[:, 0]
     for i, name in cats.items():
         print('saving', name)
         np.save('../data/um/' + name, data[inds == i])  # select by cat. index
