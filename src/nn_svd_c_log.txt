@@ -1,0 +1,23 @@
+Note: The line length of this log is purposely no limited to 80 chars. 
+
+Format of each entry:
+Directory of svd factors, k components, network iterations, network layers sizes
+Path and name of trained model
+Training RMSE losses as list
+Testing RMSE losses as list (if not 1-to-1, it consists of (epoch #, loss))
+
+
+SVD_Name=svd2, K=30, Epochs=10, Layers=(256, 128, None)
+Model Saved: ../models/c-nnsvd-k30-e10-layers(256, 128, None)-rmse0.883.h5
+RMSE training losses: [1.2117186444979258, 0.94344950453441667, 0.9085488510613895, 0.89907652233235691, 0.89429965814864221, 0.89013744579463827, 0.88673322081610284, 0.88480797105655118, 0.88369411461460901, 0.88344954094210015]
+RMSE validation losses: [(0, 0.96632928), (2, 0.91872817), (4, 0.90783358), (6, 0.90195847), (8, 0.90255469)]
+
+SVD_Name=svd2, K=30, Epochs=10, Layers=(256, 128, 16)
+Model Saved: ../models/c-nnsvd-k30-e10-layers(256, 128, 16)-rmse0.883.h5
+RMSE training losses: [1.1821234151397075, 0.94809694385158227, 0.90819622345425011, 0.89915844558437952, 0.89406720049554966, 0.89091186740013772, 0.88799659479985515, 0.88462715591227992, 0.88308853391901032, 0.88304093705218878]
+RMSE validation losses: [(0, 0.97151154), (2, 0.92384052), (4, 0.91921407), (6, 0.9068228), (8, 0.90175223)]
+
+SVD_Name=svd2, K=30, Epochs=5, Layers=(256, 128, 32)
+Model Saved: ../models/c-nnsvd-k30-e5-layers(256, 128, 32)-rmse0.895.h5
+RMSE training losses: [1.1971047538245421, 0.94351756285535204, 0.91040730431871364, 0.90005501235213203, 0.89542999009307178]
+RMSE validation losses: [(0, 0.96675628), (2, 0.92380965), (4, 0.91760355)]

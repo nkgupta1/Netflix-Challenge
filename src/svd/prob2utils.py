@@ -45,6 +45,8 @@ def get_err(U, V, a, b, Y, reg=0.0):
     # Compute mean squared error on each data point in Y; include
     # regularization penalty in error calculations.
     # We first compute the total squared squared error
+    print('estoy acqui!!!!!!!')
+    quit()
     err = 0.0
     for (i,j,Yij) in Y:
         i, j = int(i), int(j)
