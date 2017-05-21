@@ -26,9 +26,8 @@ int main () {
     //float rmse = 0;
 
     for (int i = 0; i < T; i++) {
-        printf("%d\n", i);
-        // if (i % 100000 == 0) 
-        //     printf("%d\n", i);
+        if (i % 100000 == 0) 
+            printf("%d\n", i);
 
         if (infile >> userId >> movieId >> date >> rating) {
             double r = compute_rating(userId, movieId, user_info, top_q, num_neighbors);
