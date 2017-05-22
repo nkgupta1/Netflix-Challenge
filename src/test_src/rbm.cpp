@@ -2,6 +2,8 @@
  * Implementation of restrcited boltzmann machine.
  */
 
+// Completely port over to new copy, just to kill off bad spam.
+
 #include "rbm.hpp"
 
 #define U   458293      // Users
@@ -15,7 +17,7 @@
 using namespace std;
 
 // Normal constructor
-RBM::RBM(const string file, int hidden, float learning_rate) {
+RBM::RBM(const string file, const string v_file, int hidden, float learning_rate) {
     int i, j, k;
     // Parameters of RBM
     V = M;
@@ -23,10 +25,11 @@ RBM::RBM(const string file, int hidden, float learning_rate) {
     K = 5;
     eps = learning_rate;
     data_file = file;
+    valid_file = v_file;
     
     // Handle default initialization in its own function;
     // makes life easier for saving / loading
-    init(data_file);
+    init(data_file, valid_file);
 
     // Weights
     W = (float ***) malloc(sizeof(float **) * V);
@@ -35,24 +38,30 @@ RBM::RBM(const string file, int hidden, float learning_rate) {
         for (j = 0; j < F; j++) {
             W[i][j] = (float *) malloc(sizeof(float) * K);
             for (k = 0; k < K; k++) {
-                W[i][j][k] = sym_rand(gen);
+                W[i][j][k] = 0.02*unit_rand(gen)-0.04;
             }
         }
     }
 
-    // Visible biases
+    // Visible biases - Set to log(p/(1-p)), where p
+    // is the initial proportion of users for which bias is on
+    // This basically equates to the percentage of movies rated
+    // 1-5.
     vis_bias = (float **) malloc(sizeof(float *) * V);
     for (i = 0; i < V; i++) {
         vis_bias[i] = (float *) malloc(sizeof(float) * K);
-        for (j = 0; j < K; j++) {
-            vis_bias[i][j] = sym_rand(gen);
-        }
+        
+        vis_bias[i][0] = log(0.05/0.95);
+        vis_bias[i][1] = log(0.10/0.90);
+        vis_bias[i][2] = log(0.25/0.75);
+        vis_bias[i][3] = log(0.30/0.70);
+        vis_bias[i][4] = log(0.30/0.70);
     }
 
-    // Hidden biases
+    // Hidden biases - Hinton says set to 0
     hid_bias = (float *) malloc(sizeof(float) * F);
     for (i = 0; i < F; i++) {
-        hid_bias[i] = sym_rand(gen);
+        hid_bias[i] = 0;
     }
 }
 
@@ -62,10 +71,10 @@ RBM::RBM(const string file) {
     ifstream ifs(file);
 
     // Load in parameters
-    ifs >> V >> F >> K >> eps >> data_file;
+    ifs >> V >> F >> K >> eps >> data_file >> valid_file;
 
     // Initialize 
-    init(data_file);
+    init(data_file, valid_file);
 
     // Weights
     W = (float ***) malloc(sizeof(float **) * V);
@@ -100,7 +109,7 @@ void RBM::save(const string fname) {
     ofstream ofs(fname);
 
     // Save parameters
-    ofs << V << " " << F << " " << K << " " << eps << " " << data_file << " ";
+    ofs << V << " " << F << " " << K << " " << eps << " " << data_file << " " << valid_file << " ";
 
     // Weights
     for (i = 0; i < V; i++) {
@@ -131,30 +140,39 @@ RBM::~RBM(){
 }
 
 // Initialize data set. Called at construction and at load.
-void RBM::init(const string file) {
-    printf("   Initializing arrays...\n");
+void RBM::init(const string file, const string v_file) {
     // Dataset
-    int N = line_count(file);
-    data = (int *) malloc(sizeof(int) * 4 * N);
-    memset(data, 0, sizeof(int)*4*N);
+    int N1 = line_count(file);
+    data = (int *) malloc(sizeof(int) * 4 * N1);
+    memset(data, 0, sizeof(int)*4*N1);
 
     // Id's for dataset (extra one is used for determing the end)
     data_idxs = (int *) malloc(sizeof(int) * (U+1));
     memset(data_idxs, 0, sizeof(int)*U);
-    data_idxs[U] = N;
+    data_idxs[U] = N1;
     read_data(file, data, data_idxs);
-    printf("   Arrays initialized.\n");
+
+    int N2 = line_count(v_file);
+    valid = (int *) malloc(sizeof(int) * 4 * N2);
+    memset(valid, 0, sizeof(int)*4*N2);
+
+    // Id's for dataset (extra one is used for determing the end)
+    valid_idxs = (int *) malloc(sizeof(int) * (U+1));
+    memset(valid_idxs, 0, sizeof(int)*U);
+    valid_idxs[U] = N2;
+    read_data(v_file, valid, valid_idxs);
 
     // Random number generator; used for weights
     random_device rd;        // Something to do with seeding
     gen = ranlux24_base(rd()); // Fast generator
-    sym_rand = uniform_real_distribution<float>(-0.01,0.01); // Uniform distribution
     unit_rand = uniform_real_distribution<float>(0,1); // Unit uniform
 }
 
 void RBM::deinit() {
     free(data);
     free(data_idxs);
+    free(valid);
+    free(valid_idxs);
 
     // Delete weights, inward out
     for (int i = 0; i < V; i++) {
@@ -212,6 +230,11 @@ void RBM::train(int start, int stop, int steps) {
 
     // CHANGE IN WEIGHTS, BIASES
 
+    // Move everything over to Eigen package at some point, should be 
+    // faster
+
+    // Also, only divide things by the number of people who watch the movie
+    // float del_W[V][F][K];
     // Weights
     float ***del_W = (float ***) malloc(sizeof(float **) * V);
     for (i = 0; i < V; i++) {
@@ -232,7 +255,6 @@ void RBM::train(int start, int stop, int steps) {
             del_vis_bias[i][j] = 0;
         }
     }
-    // printf("Vis biases good.\n");
     // Hidden biases
     float *del_hid_bias = (float *) malloc(sizeof(float) * F);
     for (i = 0; i < F; i++) {
@@ -412,7 +434,10 @@ void RBM::forward(float **input, float *hidden, int num_mov, bool dis) {
             }
         }
 
-        prob = sig(hid_bias[i] + sum);
+        // Scale hidden_bias by number of movies
+        // Really, this makes much more sense than what I was 
+        // doing before...
+        prob = sig(num_mov*hid_bias[i] + sum);
         if (dis) {
             // Discretize hidden layer
             if (prob > unit_rand(gen)) {
@@ -516,7 +541,7 @@ void RBM::predict(const string fname, const string outname, int start, int stop)
         // printf("Second population good.\n");
 
         // Run predictions
-        forward(input, hidden, num_tot, 1);
+        forward(input, hidden, num_known, 1);
         backward(input, hidden, num_tot, 0);
         // for (j = 0; j < num_tot; j++) {
         //     printf("%f,%f,%f,%f,%f,%f\n", 
@@ -567,6 +592,93 @@ void RBM::predict(const string fname, const string outname, int start, int stop)
     free(dta_ids);
 }
 
+float RBM::validate() {
+    int i, j, k, num_known, num_pred, num_tot, count;
+    float rmse, **input, *hidden;
+
+    rmse = 0.0;
+    count = 0;
+    // For each user, generate predictions (100000 seems like enough)
+    for (i = 1; i <= 100000; i++) {
+        printf("%d\n", i);
+        // Alright, now have data. Time to predict!
+        num_known = data_idxs[i]-data_idxs[i-1];
+        num_pred = valid_idxs[i] - valid_idxs[i-1];
+        num_tot = num_known + num_pred;
+
+        // printf("First population good.\n");
+        input = (float **) malloc(sizeof(float *) * num_tot);
+        for (j = 0; j < num_tot; j++) {
+            input[j] = (float *) malloc(sizeof(float) * 6);
+            memset(input[j], 0, sizeof(float)*6);
+        }
+        // Hidden results for h_data
+        hidden = (float *) malloc(sizeof(float) * F);
+        memset(hidden, 0, sizeof(float) * F);
+
+        // Populate input with known movies...
+        for (k = data_idxs[i-1]; k < data_idxs[i]; k++) {
+            j = k - data_idxs[i-1];
+
+            input[j][0] = data[4*k+1];
+            input[j][data[4*k+3]] = 1;
+        }
+        // ... and with unknown movies
+        for (k = valid_idxs[i-1]; k < valid_idxs[i]; k++) {
+            j = (k - valid_idxs[i-1]) + num_known;
+
+            input[j][0] = valid[4*k+1];
+        }
+
+        // printf("Second population good.\n");
+
+        // Run predictions
+        forward(input, hidden, num_known, 1);
+        backward(input, hidden, num_tot, 0);
+
+        // printf("Forward/backward good\n");
+
+        for (k = valid_idxs[i-1]; k < valid_idxs[i]; k++) {
+            j = (k - valid_idxs[i-1]) + num_known;
+
+            // Calculate average rating and print to file.
+            float numerator = 0;
+            numerator += input[j][1] * 1;
+            numerator += input[j][2] * 2;
+            numerator += input[j][3] * 3;
+            numerator += input[j][4] * 4;
+            numerator += input[j][5] * 5;
+
+            float denominator = 0;
+            denominator += input[j][1];
+            denominator += input[j][2];
+            denominator += input[j][3];
+            denominator += input[j][4];
+            denominator += input[j][5];
+
+            float mean = numerator / denominator;
+
+            // ofs << dta[4*k]   << " "   // User
+            //     << dta[4*k+1] << " "   // Movie
+            //     << dta[4*k+2] << " "   // Date
+            //     << mean       << "\n"; // Rating
+            rmse += pow(mean - valid[4*k+3], 2);
+            count++;
+        }
+
+        // Clean-up
+        for (j = 0; j < num_tot; j++) {
+            free(input[j]);
+        }
+        free(input);
+        free(hidden);
+        printf("    %f\n",sqrt(rmse/count));
+    }
+
+    rmse = sqrt(rmse/count);
+    return rmse;
+}
+
 int RBM::line_count(const string fname) {
     // Counts number of lines in a file. Going into util at some point
     int count = 0;
@@ -587,7 +699,7 @@ float RBM::sig(float num) {
 // syntax because why not.
 // Written as a constructor because I don't want to write it as 
 // a static method
-RBM::RBM(const string file, int hidden, float learning_rate,
+void run_rbm(const string file, const string v_file, int hidden, float learning_rate,
     const string fname, const string outname, const string save_name,
     int full_iters, int cd_steps) {
 
@@ -595,40 +707,47 @@ RBM::RBM(const string file, int hidden, float learning_rate,
 
     // Create the RBM
     printf("Creating RBM...\n");
-    RBM rbm = RBM(file, hidden, learning_rate);
+    RBM rbm = RBM(file, v_file, hidden, learning_rate);
+    for (i = 0; i < 10; i++) {
+        rbm.train((i*100)+1, (i+1)*100, 3);
+    }
+    // rbm.train(1,1000,3);
+    // rbm.predict(fname,outname,1,U);
+    float init_rmse = rbm.validate();
+    // printf("%f\n", init_rmse);
     // RBM rbm = RBM(save_name);
     printf("RBM Created.\n");
+
+    exit(0);
 
     for (i = 0; i < full_iters; i++) {
         printf("Beginning iteration %d of %d\n", i+1, full_iters);
 
-        // 916 = 458000 / 500
-        for (j = 0; j < 4582; j++) {
-            rbm.train((j*100)+1,(j+1)*100,cd_steps);
+        // 45828 = 458280 / 10
+        for (j = 0; j < 45828; j++) {
+            rbm.train((j*10)+1,(j+1)*10,cd_steps);
             // Every 1000, print a . just to prove everything's running
-            if (((j+1)*100) % 1000 == 0) {
+            if (((j+1)*10) % 1000 == 0) {
                 printf(".");
                 fflush(stdout);
             }
             // Every 50000, give an update
-            if ((((j+1)*100) % 50000 == 0) && (((j+1)*100) != 450000)) {
-                printf("    %d/458293 completed.\n", (j+1)*100);
+            if ((((j+1)*10) % 50000 == 0) && (((j+1)*10) != 450000)) {
+                printf("    %d/458293 completed.\n", (j+1)*10);
             }
             // Every 150000, save progress
-            if ((((j+1)*100) % 150000 == 0) && (((j+1)*100) != 450000)) {
+            if ((((j+1)*10) % 150000 == 0) && (((j+1)*10) != 450000)) {
                 printf("    Printing and saving...\n");
-                rbm.eps /= 2;
                 rbm.save(save_name);
-                rbm.predict(fname,outname,1,U);
+                // rbm.predict(fname,outname,1,U);
                 printf("    Printed and saved.\n");
             }
         }
         // Train on last few examples
-        rbm.train(458201,458293,cd_steps);
+        rbm.train(458281,458293,cd_steps);
         printf("    458293/458293 completed.\n");
         printf("    Printing and saving...\n");
 
-        rbm.eps /= 2;
         rbm.save(save_name);
         rbm.predict(fname,outname,1,U);
         printf("    Printed and saved.\n");
@@ -642,8 +761,9 @@ int main() {
 
     // RBM f = RBM("../../data/um/base_all.dta", 100, 0.01);
     // f.predict("../../data/um/qual_all.dta", "../../data/um/rbm_preds.dta",1,U);
-    RBM("../../data/um/base_all.dta", 200, 1, "../../data/um/qual_all.dta", 
-        "../../data/um/rbm_preds3.dta", "rbm3.mat", 10, 3);
+    run_rbm("../../data/um/base_all.dta", "../../data/um/valid_all.dta", 200, 
+        0.01, "../../data/um/qual_all.dta", "../../data/um/rbm_preds.dta", 
+        "rbm.mat", 10, 3);
     // RBM rbm = RBM("rbm.mat");
     // printf("Loaded.\n");
     // rbm.predict("../../data/um/qual_all.dta", "../../data/um/rbm_preds.dta");
