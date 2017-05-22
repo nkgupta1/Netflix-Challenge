@@ -26,7 +26,7 @@ int main () {
     //float rmse = 0;
 
     for (int i = 0; i < T; i++) {
-        if (i % 100000 == 0) 
+        if (i % 1000 == 0)
             printf("%d\n", i);
 
         if (infile >> userId >> movieId >> date >> rating) {
