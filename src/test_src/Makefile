@@ -10,6 +10,12 @@ preprocess: $(OBJS) preprocess.o
 
 rbm: rbm.o
 	$(CC) -o $@ $^
+
+tst: tst.o
+	$(CC) -o $@ $^
+
+new_rbm: $(OBJS) new_rbm.o
+	$(CC) -o $@ $^
 	
 # $(PLAYERNAME): $(OBJS) wrapper.o
 # 	$(CC) -o $@ $^
@@ -30,6 +36,6 @@ rbm: rbm.o
 # 	make -C java/ clean
 
 clean:
-	rm -f *.o util preprocess rbm
+	rm -f *.o util preprocess rbm tst
 
 .PHONY: all clean

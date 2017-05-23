@@ -5,14 +5,15 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <cmath>
+
+
+#include <fcntl.h>
+#include <unistd.h>
 
 #define U   458293      // Users
-// #define U   23          // Users
 #define M   17770       // Movies
-#define N   102416306   // Data Points
-// #define N   4552        // Data Points in function testing set
 #define D   2243        // Number days
-#define K   5           // Number ratings
 
 using namespace std;
 
@@ -20,10 +21,10 @@ using namespace std;
 const string directory_from_path(const string str);
 const string file_from_path(const string str);
 
-// Memcopy function would be nice, so long as there's no vectory nonsense
-void save(void *object, int size, const string fname);
-void load(void *object, int size, const string fname);
+// Line count; useful if you don't want to just hardcode these numbers
+int line_count(const string file);
 
-// TODO - read in entire file as a single digit array = ~1.6Gb
+// General sigmoid function
+float sig(float num);
 
 #endif
