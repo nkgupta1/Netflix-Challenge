@@ -9,12 +9,12 @@ RBM::RBM(const string file, const string v_file,
     F = hidden;
     K = 5;
 
-    mom = 0.5;
-    weightcost = 0.0001;
+    mom = 0.9;//0.5;
+    weightcost = 0.001;
 
-    eps_w = 0.001 * 2.5;
-    eps_vis = 0.008 * 2.5;
-    eps_hid = 0.001 * 2.5;
+    eps_w = 0.01;//0.001 * 10;
+    eps_vis = 0.01;//0.008 * 10;
+    eps_hid = 0.01;//0.002 * 10;
 
     data_file = file;
     valid_file = v_file;
@@ -341,7 +341,7 @@ void RBM::init_random() {
     random_device rd;        // Something to do with seeding
     gen = ranlux24_base(rd()); // Fast generator
     unit_rand = uniform_real_distribution<float>(0,1); // Unit uniform
-    normal = normal_distribution<float>(0,0.01); // Normal u = 0, std = 0.01
+    normal = normal_distribution<float>(0,0.01); // Normal u = 0, std = 1
 }
 
 void RBM::init_temp() {
@@ -374,7 +374,8 @@ void RBM::init_temp() {
             qual_max = t;
         }
     }
-    int total_max = train_max + valid_max + qual_max;
+    // 2 times for in sample error
+    int total_max = 2*train_max + valid_max + qual_max;
 
     // Initialize input_t
     input_t = (float **) calloc(total_max, sizeof(float *));
@@ -579,28 +580,28 @@ void RBM::forward(float **input, float *hidden, int num_mov, bool dis) {
     int i, j, k, mov;
     float sum, prob;
     // Calculate score for each hidden element
-    for (i = 0; i < F; i++) {
+    for (j = 0; j < F; j++) {
         sum = 0;
-        for (j = 0; j < num_mov; j++) {
-            mov = (int) input[j][0];
+        for (i = 0; i < num_mov; i++) {
+            mov = (int) input[i][0];
             for (k = 1; k <= 5; k++) {
-                sum += input[j][k]*W[mov-1][i][k-1][0];
+                sum += input[i][k]*W[mov-1][j][k-1][0];
             }
         }
 
         // Scale hidden_bias by number of movies
         // Really, this makes much more sense than what I was 
-        // doing before...
-        prob = sig(num_mov*hid_bias[i][0] + sum);
+        // doing before... Turn off scaling for now, add back and see
+        prob = sig(hid_bias[j][0] + sum);
         if (dis) {
             // Discretize hidden layer
             if (prob > unit_rand(gen)) {
-                hidden[i] = 1.0;
+                hidden[j] = 1.0;
             } else {
-                hidden[i] = 0.0;
+                hidden[j] = 0.0;
             }
         } else {
-            hidden[i] = prob;
+            hidden[j] = prob;
         }
     }
 }
@@ -609,31 +610,31 @@ void RBM::backward(float **input, float *hidden, int num_mov, bool dis) {
     int i, j, k, mov;
     float sum, prob, norm;
     // Calculate score for each visible element
-    for (j = 0; j < num_mov; j++) {
-        mov = (int) input[j][0];
+    for (i = 0; i < num_mov; i++) {
+        mov = (int) input[i][0];
         norm = 0;
         for (k = 1; k <= 5; k++) {
             sum = 0;
-            for (i = 0; i < F; i++) {
-                sum += hidden[i]*W[mov-1][i][k-1][0];
+            for (j = 0; j < F; j++) {
+                sum += hidden[j]*W[mov-1][j][k-1][0];
             }
 
             // Discretize hidden layer
-            prob = sig(vis_bias[mov-1][k-1][0] + sum);
+            prob = exp(vis_bias[mov-1][k-1][0] + sum);
             if (dis) {
                 if (prob > unit_rand(gen)) {
-                    input[j][k] = 1.0;
+                    input[i][k] = 1.0;
                 } else {
-                    input[j][k] = 0.0;
+                    input[i][k] = 0.0;
                 }
             } else {
-                input[j][k] = prob;
+                input[i][k] = prob;
             }
             norm += prob;
         }
 
         for (k = 1; k <= 5; k++) {
-            input[j][k] /= norm;
+            input[i][k] /= norm;
         }
     }
 }
@@ -678,7 +679,7 @@ float RBM::validate(int start, int stop, int *dta, int *dta_ids) {
         //         input_t[j][3],input_t[j][4],input_t[j][5]);
         // }
 
-        // Run prediction -> Check again with 0 -> 1
+        // Run prediction (don't bother) -> Check again with 0 -> 1
         forward(input_t, hidden_t, num_tot, 0);
         backward(input_t, hidden_t, num_tot, 0);
 
@@ -729,23 +730,31 @@ float RBM::validate(int start, int stop, int *dta, int *dta_ids) {
 
 int main() {
     RBM rbm = RBM("../../data/um/base_all.dta", "../../data/um/probe_all.dta", 
-                  "../../data/um/qual_all.dta", 100);
+                  "../../data/um/qual_all.dta", 200);
     // RBM rbm = RBM("test_data/um/base_test.dta", "test_data/um/probe_test.dta", 
     //               "test_data/um/qual_test.dta", 200);
     int tsteps = 1;
     float prmse = 10;
     float rmse = 5;
     int runcount = 0;
-    while ((rmse < prmse) || (runcount < 15)) {
-        if (runcount >= 10) {
-            tsteps = 3 + (int) ((runcount - 10)/5);
-        }
+    rbm.mom = 0.5;
+
+    // Probably want more regularization, bc momentum is rough
+    while ((rmse < prmse) || (runcount < 40)) {
+        // if (runcount >= 10) {
+        //     tsteps = 3 + (int) ((runcount - 10)/5);
+        // }
         if (runcount == 5) {
-            rbm.set_mom(0.9);
+            rbm.mom = 0.9;
+        }
+        if ((prmse-rmse) < 0.0001) {
+            // Maybe also reset momentum?
+            tsteps += 2;
+            printf("Incrementing tsteps: now %d\n", tsteps);
         }
 
-        // First half
-        for (int i = 0; i < 2290; i++) {
+        // ...
+        for (int i = 0; i < 4580; i++) {
             rbm.train((i*100)+1,(i+1)*100, tsteps);
             if ((i % 10) == 1) {
                 printf(".");
@@ -755,36 +764,24 @@ int main() {
                 float ein_t = rbm.validate(448001,458000, rbm.data, rbm.data_idxs);
                 float rmse_t = rbm.validate(448001,458000, rbm.valid, rbm.valid_idxs);
                 printf("    E_in: %f    E_valid: %f\n", ein_t, rmse_t);
+
+                // runcount++;
+                // if (runcount > 8) {
+                //     rbm.eps_w *= 0.92;
+                //     rbm.eps_vis *= 0.92;
+                //     rbm.eps_hid *= 0.92;
+                // } else if (runcount > 6) {
+                //     rbm.eps_w *= 0.9;
+                //     rbm.eps_vis *= 0.9;
+                //     rbm.eps_hid *= 0.9;
+                // } else if (runcount > 2) {
+                //     rbm.eps_w *= 0.78;
+                //     rbm.eps_vis *= 0.78;
+                //     rbm.eps_hid *= 0.78;
+                // }
             }
-        }
-        runcount++;
-        if (runcount > 8) {
-            rbm.eps_w *= 0.92;
-            rbm.eps_vis *= 0.92;
-            rbm.eps_hid *= 0.92;
-        } else if (runcount > 6) {
-            rbm.eps_w *= 0.9;
-            rbm.eps_vis *= 0.9;
-            rbm.eps_hid *= 0.9;
-        } else if (runcount > 2) {
-            rbm.eps_w *= 0.78;
-            rbm.eps_vis *= 0.78;
-            rbm.eps_hid *= 0.78;
         }
 
-        // Second half
-        for (int i = 2290; i < 4580; i++) {
-            rbm.train((i*100)+1,(i+1)*100, tsteps);
-            if ((i % 10) == 1) {
-                printf(".");
-                fflush(stdout);
-            }
-            if (((i+1) % 500) == 0) {
-                float ein_t = rbm.validate(448001,458000, rbm.data, rbm.data_idxs);
-                float rmse_t = rbm.validate(448001,458000, rbm.valid, rbm.valid_idxs);
-                printf("    E_in: %f    E_valid: %f\n", ein_t, rmse_t);
-            }
-        }
         rbm.train(458001,458293,tsteps);
         prmse = rmse;
         // rmse = rbm.validate(1,458293); Validating the whole set
@@ -794,20 +791,20 @@ int main() {
         printf("\nOverall E_in: %f    Overall RMSE: %f\n", ein, rmse);
         runcount++;
 
-        if (runcount > 8) {
-            rbm.eps_w *= 0.92;
-            rbm.eps_vis *= 0.92;
-            rbm.eps_hid *= 0.92;
-        } else if (runcount > 6) {
-            rbm.eps_w *= 0.9;
-            rbm.eps_vis *= 0.9;
-            rbm.eps_hid *= 0.9;
-        } else if (runcount > 2) {
-            rbm.eps_w *= 0.78;
-            rbm.eps_vis *= 0.78;
-            rbm.eps_hid *= 0.78;
-        }
-        rbm.save("rbm2.mat");
+        // if (runcount > 8) {
+        //     rbm.eps_w *= 0.92;
+        //     rbm.eps_vis *= 0.92;
+        //     rbm.eps_hid *= 0.92;
+        // } else if (runcount > 6) {
+        //     rbm.eps_w *= 0.9;
+        //     rbm.eps_vis *= 0.9;
+        //     rbm.eps_hid *= 0.9;
+        // } else if (runcount > 2) {
+        //     rbm.eps_w *= 0.78;
+        //     rbm.eps_vis *= 0.78;
+        //     rbm.eps_hid *= 0.78;
+        // }
+        rbm.save("rbm_sala_half_bsize100.mat");
     }
     // RBM rbm = RBM("temp.mat");
     // rbm.train(3,3,1);
