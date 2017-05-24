@@ -1,17 +1,20 @@
 import tensorflow as tf
 import numpy as np
 import time
+from sklearn.utils import shuffle
 from cache import *
 import keras
 import pandas
-from keras.models import Sequential, load_model
+from keras.models import Sequential
 from keras import optimizers
-from keras.layers.core import Dense
+from keras.layers.core import Dense, Dropout
+from keras import regularizers
 from os import listdir
 
 class NN:
-    def __init__(self, mode='both', folder='svd2', biases=False, epochs=5, 
-        layers=(256, 128, 32), valid_per=2):
+    def __init__(self, mode='both', folder='svd3', biases=True, epochs=12, 
+        layers=(8192, 2048, None), dropouts=(0.8, 0.8, 0.8), valid_per=1, 
+        save_epochs=[1, 3, 6], w_reg=0.0025, b_reg=0.0025):
         '''
         Uses the svd latent factors in the folder data/arg:folder to train a 
         neural network along with indices and ratings in base (uses biases if 
@@ -24,30 +27,37 @@ class NN:
         with network). When training, the period (epochs) between testing 
         validation (which takes time) per epoch is given by arg:valid_per.
         '''
-        self.data_mean = 0. # 3.60860891887339 # svd mean not implemented yet
+        # (8096, 2048, 512) dropouts=(0.9, 0.9, 0.9) 
+        self.data_mean = 3.60860891887339
 
-        self.epochs, self.layers = epochs, layers
+        # weight and bias regularization
+        self.w_reg, self.b_reg = w_reg, b_reg
+        self.epochs, self.layers, self.dropouts = epochs, layers, dropouts
         self.folder, self.biases = folder, biases
 
         # number of blocks to split the data into b/c of memory limitations:
         # provides much better performance than swapping >20gb in/out while 
         # training. the optimal number is dependent on individual hardware
-        self.num_blocks = 100
+        self.num_blocks = 8000
         
         # name of dataset to use for validation data
-        self.valid_data = 'valid'
+        self.valid_data = 'probe'
 
         # time for training is about 80-90 seconds/epoch
         # time for validation testing is about 35-40 seconds/epoch
         self.valid_per = valid_per
 
+        # epochs at which to save model (excluding final epoch)
+        self.save_epochs = set(save_epochs)
+
+        predict = 'c-nnsvd-k50-e3-layers(3072, 512, 128)-dropouts(0.8, 0.8, 0.8)-rmse0.867'
         if mode == 'train':
             self.read_data()
             self.train()
             self.save_model()
         elif mode == 'predict':
             self.read_data(read_training=False)
-            self.load_model('../models/c-nnsvd-k30-e6-layers256,64-rmse0.898.h5')
+            self.load_model('../models/' + predict + '.h5')
             self.predict()
         elif mode == 'both':
             self.read_data()
@@ -141,11 +151,12 @@ class NN:
             sep=' ', dtype=np.float32).values[:, :-1]
         if self.biases:
             self.a = pandas.read_csv(folder + '/' + files[a], header=None, 
-                sep=' ', dtype=np.float32).values[:, :-1]
+                sep=' ', dtype=np.float32).values[0]
             self.b = pandas.read_csv(folder + '/' + files[b], header=None, 
-                sep=' ', dtype=np.float32).values[:, :-1]
+                sep=' ', dtype=np.float32).values[0]
+            print('a=', self.a.shape, 'b=', self.b.shape)
         self.K = self.u.shape[1]
-        print('k=%d' % self.K, 'u:', self.u.shape, self.u.dtype, 'v', 
+        print('k=%d' % self.K, 'u=', self.u.shape, self.u.dtype, 'v=', 
             self.v.dtype, self.v.shape)
 
         if read_training:
@@ -185,7 +196,7 @@ class NN:
         '''
         ij = (data[:, :2] - 1)  # make the data zero indexed
         if data.shape[1] == 4:
-            ratings = (data[:, 3].astype(np.float32)- self.data_mean)
+            ratings = (data[:, 3].astype(np.float32) - self.data_mean)
             if self.biases:
                 ratings -= self.a[ij[:, 0]]
                 ratings -= self.b[ij[:, 1]]
@@ -223,6 +234,9 @@ class NN:
             ratings = self.blocks_ratings[block]
             yield trainx, ratings
             block = (block + 1) % self.num_blocks
+            if block == 0:
+                self.blocks_ij, self.blocks_ratings = shuffle(self.blocks_ij, 
+                    self.blocks_ratings)
 
 
     def make_model(self):
@@ -234,13 +248,18 @@ class NN:
         self.model = Sequential()
         # hidden layer 1
         self.model.add(Dense(self.layers[0], input_shape=(self.K * 2,), 
-            activation='linear'))
-        # hidden layer 2
-        if self.layers[1]:
-            self.model.add(Dense(self.layers[1], activation='relu'))    
-        # hidden layer 3
-        if self.layers[2]:
-            self.model.add(Dense(self.layers[2], activation='relu'))
+            activation='linear', W_regularizer=regularizers.l2(self.w_reg),
+                b_regularizer=regularizers.l1(self.b_reg)))
+        if self.dropouts[0]:
+            self.model.add(Dropout(self.dropouts[0]))
+        # hidden layers 2, 3
+        for l in [1, 2]: 
+            if self.layers[l]:
+                self.model.add(Dense(self.layers[l], activation='relu', 
+                W_regularizer=regularizers.l2(self.w_reg),
+                b_regularizer=regularizers.l1(self.b_reg)))
+                if self.dropouts[l]:
+                    self.model.add(Dropout(self.dropouts[l]))
         # output layer   
         self.model.add(Dense(1, activation='relu'))  
         self.model.summary()  # double-check model format
@@ -256,7 +275,7 @@ class NN:
         '''
         self.make_model()
         self.rmse = RMSE(self.generate_validation, self.get_training_rmse, 
-            validate=self.valid_per)
+            self.save_model, self.save_epochs, validate=self.valid_per)
         self.model.fit_generator(self.generate_block(), 
             samples_per_epoch=self.num_points, nb_epoch=self.epochs, 
             verbose=True, callbacks=[self.rmse])
@@ -265,23 +284,35 @@ class NN:
             print('RMSE validation losses:', self.rmse.validation_losses)
 
 
-    def save_model(self):
+    def save_model(self, mid_epoch=False):
         '''
         Save the weights of the model self.model in ../models/ and training 
         information to the log nn_svd_c_log.txt.
         '''
-        self.model_name = ('c-nnsvd-k'+ str(self.K) + '-e' + str(self.epochs) 
-            + '-layers' + str(self.layers) + '-rmse' 
-            + str(self.rmse.losses[-1])[:5] + '.h5')
+        if mid_epoch:
+            epochs = mid_epoch
+        else:
+            epochs = self.epochs
+        self.model_name = ('c-nnsvd-k'+ str(self.K) + '-e' + str(epochs) 
+            + '-layers' + str(self.layers) + '-dropouts' + str(self.dropouts) 
+            + '-regs' + str(self.w_reg) + ',' + str(self.b_reg)
+            + '-rmse' + str(self.rmse.losses[-1])[:5] + '.h5')
         filename = ('../models/' + self.model_name)
         self.model.save_weights(filename)
         print('model saved as:', filename)
         with open('nn_svd_c_log.txt', 'a') as log:
             log.write('\nSVD_Name=' + self.folder + ', K=' + str(self.K) +
-            ', Epochs=' + str(self.epochs) + ', Layers=' + str(self.layers) + 
-            '\nModel Saved: ' + filename + '\nRMSE training losses: ' + 
+            ', Epochs=' + str(epochs) + ', Layers=' + str(self.layers) + 
+            ', Dropouts=' + str(self.dropouts) + ', Validation=' + 
+            self.valid_data + ', Regularization (weights, bias)=' + 
+            str((self.w_reg, self.b_reg)) + '\nModel Saved: ' + filename + 
+            '\nRMSE training losses: ' + 
             str(self.rmse.losses) + '\nRMSE validation losses: ' + 
             str(self.rmse.validation_losses) + '\n')
+
+            if self.save_epochs:
+                log.write('Intermediate Epochs Saved: ' + 
+                    str(self.save_epochs) + '\n')
 
 
     def predict(self, save_name=None):
@@ -318,18 +349,10 @@ class NN:
         for printing validation error at the start of training, instead 
         of every epoch.
         '''
-        print('preparing validation rmse for callback...')
+        print('preparing validation data for callback...')
         ij, valid_ratings = self.preprocess_data(read_arr(self.valid_data))
         testx = np.concatenate((self.u[ij[:, 0]], self.v[ij[:, 1]]), axis=1)
         valid_ratings = valid_ratings[:, 0]
-
-        # save computation time by subtracting out the means from the ratings 
-        # instead of adding them to the predictions
-        predict_dif = self.data_mean
-        if self.biases:
-            predict_dif += self.a[qual_ij[:, 0]] + self.b[qual_ij[:, 1]]
-        valid_ratings -= - predict_dif
-
         return testx, valid_ratings
 
 
@@ -343,7 +366,7 @@ class RMSE(keras.callbacks.Callback):
     epochs given by arg:validate of init(). If self.validate is zero, it 
     does not record validation error.
     '''
-    def __init__(self, generate_testx, train_rmse, validate=1):
+    def __init__(self, generate_testx, train_rmse, save, save_epochs, validate):
         '''
         Uses arg:generate_testx function to generation test validation 
         data. Uses arg:train_rmse function to generating training 
@@ -354,6 +377,8 @@ class RMSE(keras.callbacks.Callback):
         keras.callbacks.Callback.__init__(self)
         # period of iterations between generation of validation errors:
         self.validate = validate
+        # period of iterations between saving model using self.save()
+        self.save, self.save_epochs = save, save_epochs
 
         self.get_training_rmse = train_rmse
         if not validate:
@@ -378,6 +403,8 @@ class RMSE(keras.callbacks.Callback):
         if self.validate and (self.e % self.validate) == 0:
             self.get_validation_rmse()
         self.e += 1
+        if self.e in self.save_epochs:
+            self.save(mid_epoch=self.e)
 
 
     def get_validation_rmse(self):

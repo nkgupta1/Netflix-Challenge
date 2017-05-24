@@ -1,23 +1,215 @@
 Note: The line length of this log is purposely no limited to 80 chars. 
 
 Format of each entry:
-Directory of svd factors, k components, network iterations, network layers sizes
+Directory of svd factors, k components, network iterations, network layers sizes, dropouts (if exist), validation dataset used
 Path and name of trained model
 Training RMSE losses as list
 Testing RMSE losses as list (if not 1-to-1, it consists of (epoch #, loss))
+(if they exist:) Intermediate Epochs Saved
 
-
-SVD_Name=svd2, K=30, Epochs=10, Layers=(256, 128, None)
+SVD_Name=svd2, K=30, Epochs=10, Layers=(256, 128, None), Validation=valid
 Model Saved: ../models/c-nnsvd-k30-e10-layers(256, 128, None)-rmse0.883.h5
 RMSE training losses: [1.2117186444979258, 0.94344950453441667, 0.9085488510613895, 0.89907652233235691, 0.89429965814864221, 0.89013744579463827, 0.88673322081610284, 0.88480797105655118, 0.88369411461460901, 0.88344954094210015]
 RMSE validation losses: [(0, 0.96632928), (2, 0.91872817), (4, 0.90783358), (6, 0.90195847), (8, 0.90255469)]
 
-SVD_Name=svd2, K=30, Epochs=10, Layers=(256, 128, 16)
+SVD_Name=svd2, K=30, Epochs=10, Layers=(256, 128, 16), Validation=valid
 Model Saved: ../models/c-nnsvd-k30-e10-layers(256, 128, 16)-rmse0.883.h5
 RMSE training losses: [1.1821234151397075, 0.94809694385158227, 0.90819622345425011, 0.89915844558437952, 0.89406720049554966, 0.89091186740013772, 0.88799659479985515, 0.88462715591227992, 0.88308853391901032, 0.88304093705218878]
 RMSE validation losses: [(0, 0.97151154), (2, 0.92384052), (4, 0.91921407), (6, 0.9068228), (8, 0.90175223)]
 
-SVD_Name=svd2, K=30, Epochs=5, Layers=(256, 128, 32)
+SVD_Name=svd2, K=30, Epochs=5, Layers=(256, 128, 32), Validation=valid
 Model Saved: ../models/c-nnsvd-k30-e5-layers(256, 128, 32)-rmse0.895.h5
 RMSE training losses: [1.1971047538245421, 0.94351756285535204, 0.91040730431871364, 0.90005501235213203, 0.89542999009307178]
 RMSE validation losses: [(0, 0.96675628), (2, 0.92380965), (4, 0.91760355)]
+
+SVD_Name=svd2, K=30, Epochs=20, Layers=(350, 128, 32), Validation=valid
+Model Saved: ../models/c-nnsvd-k30-e20-layers(350, 128, 32)-rmse0.881.h5
+RMSE training losses: [1.1927735470114373, 0.93272162206336617, 0.90491788540327756, 0.89997042672901739, 0.89609172826800287, 0.89156004620810303, 0.88836742646693678, 0.88541632863377118, 0.88433159302594022, 0.88532311695484633, 0.88344621355908914, 0.88290978770472173, 0.88297011503926004, 0.88256189954189845, 0.8830081066047375, 0.8802850796717967, 0.88097258411529622, 0.88128410678760116, 0.88151121757435302, 0.88111203523181048]
+RMSE validation losses: [0.96333015, 0.93625695, 0.93107927, 0.92555457, 0.91739047, 0.92313349, 0.90562451, 0.90591341, 0.9195891, 0.90769154, 0.90945733, 0.90637147, 0.90982199, 0.92068082, 0.89679265, 0.90378278, 0.90718859, 0.91530156, 0.90864199, 0.9006815]
+
+SVD_Name=svd2, K=30, Epochs=10, Layers=(312, 128, 64), Validation=valid
+Model Saved: ../models/c-nnsvd-k30-e10-layers(312, 128, 64)-rmse0.883.h5
+RMSE training losses: [1.2187769612731219, 0.93373250332213276, 0.90330166559967096, 0.89690574898015096, 0.89162983157600484, 0.88953228118582073, 0.88567016087015926, 0.88394423215267559, 0.88203280539030482, 0.88334273889822346]
+RMSE validation losses: [0.96548253, 0.9326002, 0.92892563, 0.91734993, 0.91424644, 0.90916222, 0.89956677, 0.89700335, 0.90488154, 0.89636803]
+
+SVD_Name=svd2, K=30, Epochs=10, Layers=(1024, 128, 32), Validation=valid
+Model Saved: ../models/c-nnsvd-k30-e10-layers(1024, 128, 32)-rmse0.876.h5
+RMSE training losses: [0.96105124590586855, 0.88322359851438093, 0.88039810948223651, 0.87868421136041519, 0.87796140850816229, 0.8775258827214516, 0.8775768039072499, 0.87706440492998305, 0.87645802102717218, 0.87625754862642091]
+RMSE validation losses: [0.91531211, 0.90046352, 0.89474458, 0.89230728, 0.89234096, 0.89757019, 0.90447801, 0.89143115, 0.8921051, 0.89202785]
+
+SVD_Name=svd2, K=30, Epochs=10, Layers=(2048, 256, 64), Validation=valid
+Model Saved: ../models/c-nnsvd-k30-e10-layers(2048, 256, 64)-rmse0.875.h5
+RMSE training losses: [0.94834558950446191, 0.88225904391724341, 0.87937325175120507, 0.87807436331062905, 0.8775682278954976, 0.87747203064920032, 0.8766172705239812, 0.8764289845909421, 0.87657111037821012, 0.87553860555108032]
+RMSE validation losses: [0.89968771, 0.89327037, 0.89581096, 0.89267552, 0.89438087, 0.89320993, 0.89206827, 0.90394545, 0.89402109, 0.91010106]
+
+SVD_Name=svd2, K=30, Epochs=5, Layers=(2048, 256, 64), Validation=valid
+Model Saved: ../models/c-nnsvd-k30-e5-layers(2048, 256, 64)-rmse0.877.h5
+RMSE training losses: [0.95555689148091327, 0.88355293101953059, 0.87935237801950705, 0.87832595401177993, 0.87749651482915858]
+RMSE validation losses: [0.92972618, 0.89655417, 0.89445716, 0.89309335, 0.89563096]
+
+SVD_Name=svd2, K=30, Epochs=10, Layers=(1024, 512, 128), Validation=valid
+Model Saved: ../models/c-nnsvd-k30-e10-layers(1024, 512, 128)-rmse0.873.h5
+RMSE training losses: [0.9395498653647345, 0.88056492767303385, 0.87844529494732748, 0.87725066606134816, 0.87658914542612276, 0.87683198055277189, 0.87560957538074002, 0.87491131400920064, 0.87628389121013539, 0.87397414119044026]
+RMSE validation losses: [0.90033841, 0.89566576, 0.89297765, 0.89460909, 0.92019647, 0.9022755, 0.89546096, 0.93821907, 0.8997798, 0.89142245]
+
+SVD_Name=svd3, K=50, Epochs=10, Layers=(1024, 256, 128), Dropouts=(0.2, 0.2, 0.2), Validation=probe
+Model Saved: ../models/c-nnsvd-k50-e10-layers(1024, 256, 128)-dropouts(0.2, 0.2, 0.2)-rmse0.828.h5
+RMSE training losses: [0.84302960576816233, 0.83342744626948873, 0.83173137915456863, 0.83062093649426738, 0.83008657708847666, 0.82927509310667058, 0.82887856808662774, 0.82874160583150414, 0.8282841262331293, 0.82811574804110921]
+RMSE validation losses: [0.94838744, 0.9488712, 0.9499194, 0.94796902, 0.95026964, 0.95218635, 0.94950616, 0.9517622, 0.95557672, 0.94899988]
+Intermediate Epochs Saved: {3, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(3072, 512, 128), Dropouts=(0.8, 0.8, 0.8), Validation=probe
+Model Saved: ../models/c-nnsvd-k50-e3-layers(3072, 512, 128)-dropouts(0.8, 0.8, 0.8)-rmse0.867.h5
+RMSE training losses: [0.88230783027676685, 0.86923854993741878, 0.86755033458810271]
+RMSE validation losses: [0.94682586, 0.94543183, 0.9450435]
+Intermediate Epochs Saved: {10, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(4096, 1024, 256), Dropouts=(0.9, 0.9, 0.9), Validation=probe
+Model Saved: ../models/c-nnsvd-k50-e3-layers(4096, 1024, 256)-dropouts(0.9, 0.9, 0.9)-rmse0.939.h5
+RMSE training losses: [0.93928422479967033, 0.93902753698409058, 0.93902657318363758]
+RMSE validation losses: [1.0047386, 1.0047386, 1.0047386]
+Intermediate Epochs Saved: {10, 3, 20, 6}
+
+SVD_Name=svd3, K=50, Epochs=6, Layers=(4096, 1024, 256), Dropouts=(0.9, 0.9, 0.9), Validation=probe
+Model Saved: ../models/c-nnsvd-k50-e6-layers(4096, 1024, 256)-dropouts(0.9, 0.9, 0.9)-rmse0.939.h5
+RMSE training losses: [0.93928422479967033, 0.93902753698409058, 0.93902657318363758, 0.93902664238700584, 0.939026556140661, 0.93902591644159483]
+RMSE validation losses: [1.0047386, 1.0047386, 1.0047386, 1.0047386, 1.0047386, 1.0047386]
+Intermediate Epochs Saved: {10, 3, 20, 6}
+
+SVD_Name=svd3, K=50, Epochs=10, Layers=(4096, 1024, 256), Dropouts=(0.9, 0.9, 0.9), Validation=probe
+Model Saved: ../models/c-nnsvd-k50-e10-layers(4096, 1024, 256)-dropouts(0.9, 0.9, 0.9)-rmse0.939.h5
+RMSE training losses: [0.93928422479967033, 0.93902753698409058, 0.93902657318363758, 0.93902664238700584, 0.939026556140661, 0.93902591644159483, 0.93902614061875311, 0.9390263774115496, 0.93902602576117011, 0.93902599010419507]
+RMSE validation losses: [1.0047386, 1.0047386, 1.0047386, 1.0047386, 1.0047386, 1.0047386, 1.0047386, 1.0047386, 1.0047386, 1.0047386]
+Intermediate Epochs Saved: {10, 3, 20, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(4096, 512, 128), Dropouts=(0.8, 0.8, 0.8), Validation=probe
+Model Saved: ../models/c-nnsvd-k50-e3-layers(4096, 512, 128)-dropouts(0.8, 0.8, 0.8)-rmse0.865.h5
+RMSE training losses: [0.87492022030064232, 0.8669428853234763, 0.8659697435221444]
+RMSE validation losses: [0.94460517, 0.94433421, 0.9441973]
+Intermediate Epochs Saved: {10, 3, 20, 6}
+
+SVD_Name=svd3, K=50, Epochs=6, Layers=(4096, 512, 128), Dropouts=(0.8, 0.8, 0.8), Validation=probe
+Model Saved: ../models/c-nnsvd-k50-e6-layers(4096, 512, 128)-dropouts(0.8, 0.8, 0.8)-rmse0.864.h5
+RMSE training losses: [0.87492022030064232, 0.8669428853234763, 0.8659697435221444, 0.86544778481398299, 0.86514076134033613, 0.86483236611864445]
+RMSE validation losses: [0.94460517, 0.94433421, 0.9441973, 0.94452143, 0.9444378, 0.94410312]
+Intermediate Epochs Saved: {10, 3, 20, 6}
+
+SVD_Name=svd3, K=50, Epochs=10, Layers=(4096, 512, 128), Dropouts=(0.8, 0.8, 0.8), Validation=probe
+Model Saved: ../models/c-nnsvd-k50-e10-layers(4096, 512, 128)-dropouts(0.8, 0.8, 0.8)-rmse0.864.h5
+RMSE training losses: [0.87492022030064232, 0.8669428853234763, 0.8659697435221444, 0.86544778481398299, 0.86514076134033613, 0.86483236611864445, 0.86468919780345077, 0.8646366482086485, 0.86451201023705082, 0.86442801627183796]
+RMSE validation losses: [0.94460517, 0.94433421, 0.9441973, 0.94452143, 0.9444378, 0.94410312, 0.94463974, 0.94523722, 0.94493538, 0.94550461]
+Intermediate Epochs Saved: {10, 3, 20, 6}
+
+SVD_Name=svd3, K=50, Epochs=20, Layers=(4096, 512, 128), Dropouts=(0.8, 0.8, 0.8), Validation=probe
+Model Saved: ../models/c-nnsvd-k50-e20-layers(4096, 512, 128)-dropouts(0.8, 0.8, 0.8)-rmse0.864.h5
+RMSE training losses: [0.87492022030064232, 0.8669428853234763, 0.8659697435221444, 0.86544778481398299, 0.86514076134033613, 0.86483236611864445, 0.86468919780345077, 0.8646366482086485, 0.86451201023705082, 0.86442801627183796, 0.86434458069987541, 0.86431080529911997, 0.86420615192678107, 0.8642445163014989, 0.86421206366241121, 0.86415359115575918, 0.86416222646137153, 0.86412628762829879, 0.86414812348312942, 0.86414225546821033]
+RMSE validation losses: [0.94460517, 0.94433421, 0.9441973, 0.94452143, 0.9444378, 0.94410312, 0.94463974, 0.94523722, 0.94493538, 0.94550461, 0.94465482, 0.94452751, 0.94478667, 0.94516414, 0.945656, 0.94594306, 0.94604009, 0.94710773, 0.9452588, 0.94560122]
+Intermediate Epochs Saved: {10, 3, 20, 6}
+
+SVD_Name=svd3, K=50, Epochs=30, Layers=(4096, 512, 128), Dropouts=(0.8, 0.8, 0.8), Validation=probe
+Model Saved: ../models/c-nnsvd-k50-e30-layers(4096, 512, 128)-dropouts(0.8, 0.8, 0.8)-rmse0.864.h5
+RMSE training losses: [0.87492022030064232, 0.8669428853234763, 0.8659697435221444, 0.86544778481398299, 0.86514076134033613, 0.86483236611864445, 0.86468919780345077, 0.8646366482086485, 0.86451201023705082, 0.86442801627183796, 0.86434458069987541, 0.86431080529911997, 0.86420615192678107, 0.8642445163014989, 0.86421206366241121, 0.86415359115575918, 0.86416222646137153, 0.86412628762829879, 0.86414812348312942, 0.86414225546821033, 0.86412373902975514, 0.86416740550497906, 0.86413626640391084, 0.86405129287514859, 0.86407512324731228, 0.86411063083784234, 0.8641160545508223, 0.86409817031831015, 0.86409171567805509, 0.86407485292137087]
+RMSE validation losses: [0.94460517, 0.94433421, 0.9441973, 0.94452143, 0.9444378, 0.94410312, 0.94463974, 0.94523722, 0.94493538, 0.94550461, 0.94465482, 0.94452751, 0.94478667, 0.94516414, 0.945656, 0.94594306, 0.94604009, 0.94710773, 0.9452588, 0.94560122, 0.94591075, 0.94684798, 0.94615859, 0.94677508, 0.94675332, 0.94637793, 0.94706202, 0.94715965, 0.94629413, 0.9472239]
+Intermediate Epochs Saved: {10, 3, 20, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(4096, 512, None), Dropouts=(0.7, 0.7, 0.7), Validation=probe, Regularization (weights, bias)=(0.003, 0.005)
+Model Saved: ../models/c-nnsvd-k50-e1-layers(4096, 512, None)-dropouts(0.7, 0.7, 0.7)-regs0.003,0.005-rmse0.918.h5
+RMSE training losses: [0.9181749508579844]
+RMSE validation losses: [0.961725]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(4096, 512, None), Dropouts=(0.7, 0.7, 0.7), Validation=probe, Regularization (weights, bias)=(0.005, 0.01)
+Model Saved: ../models/c-nnsvd-k50-e1-layers(4096, 512, None)-dropouts(0.7, 0.7, 0.7)-regs0.005,0.01-rmse0.928.h5
+RMSE training losses: [0.92874353578690727]
+RMSE validation losses: [0.9663648]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(1024, 128, None), Dropouts=(0.0, 0.0, 0.0), Validation=probe, Regularization (weights, bias)=(0.02, 0.04)
+Model Saved: ../models/c-nnsvd-k50-e1-layers(1024, 128, None)-dropouts(0.0, 0.0, 0.0)-regs0.02,0.04-rmse1.090.h5
+RMSE training losses: [1.0905833249696975]
+RMSE validation losses: [0.97243994]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(1024, 128, None), Dropouts=(0.0, 0.0, 0.0), Validation=probe, Regularization (weights, bias)=(0.02, 0.04)
+Model Saved: ../models/c-nnsvd-k50-e3-layers(1024, 128, None)-dropouts(0.0, 0.0, 0.0)-regs0.02,0.04-rmse0.910.h5
+RMSE training losses: [1.0905833249696975, 0.91295895981997344, 0.91001363002621449]
+RMSE validation losses: [0.97243994, 0.96978641, 0.96924651]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=6, Layers=(1024, 128, None), Dropouts=(0.0, 0.0, 0.0), Validation=probe, Regularization (weights, bias)=(0.02, 0.04)
+Model Saved: ../models/c-nnsvd-k50-e6-layers(1024, 128, None)-dropouts(0.0, 0.0, 0.0)-regs0.02,0.04-rmse0.906.h5
+RMSE training losses: [1.0905833249696975, 0.91295895981997344, 0.91001363002621449, 0.9083029206717832, 0.9071605182602086, 0.90642929174649645]
+RMSE validation losses: [0.97243994, 0.96978641, 0.96924651, 0.96914017, 0.96869916, 0.96822309]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(1024, 128, None), Dropouts=(0.0, 0.0, 0.0), Validation=probe, Regularization (weights, bias)=(0.01, 0.02)
+Model Saved: ../models/c-nnsvd-k50-e1-layers(1024, 128, None)-dropouts(0.0, 0.0, 0.0)-regs0.01,0.02-rmse1.003.h5
+RMSE training losses: [1.0031364305211095]
+RMSE validation losses: [0.97049892]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(1024, 128, None), Dropouts=(0.0, 0.0, 0.0), Validation=probe, Regularization (weights, bias)=(0.01, 0.01)
+Model Saved: ../models/c-nnsvd-k50-e1-layers(1024, 128, None)-dropouts(0.0, 0.0, 0.0)-regs0.01,0.01-rmse1.001.h5
+RMSE training losses: [1.0015733555670305]
+RMSE validation losses: [0.97036892]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(1024, 128, None), Dropouts=(0.0, 0.0, 0.0), Validation=probe, Regularization (weights, bias)=(0.01, 0.01)
+Model Saved: ../models/c-nnsvd-k50-e3-layers(1024, 128, None)-dropouts(0.0, 0.0, 0.0)-regs0.01,0.01-rmse0.904.h5
+RMSE training losses: [1.0015733555670305, 0.90635010272633665, 0.90424945894898512]
+RMSE validation losses: [0.97036892, 0.96867353, 0.96746975]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(1024, 128, None), Dropouts=(0.0, 0.0, 0.0), Validation=probe, Regularization (weights, bias)=(0.005, 0.01)
+Model Saved: ../models/c-nnsvd-k50-e1-layers(1024, 128, None)-dropouts(0.0, 0.0, 0.0)-regs0.005,0.01-rmse0.952.h5
+RMSE training losses: [0.95264707189426578]
+RMSE validation losses: [0.96448058]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(1024, 128, None), Dropouts=(0.0, 0.0, 0.0), Validation=probe, Regularization (weights, bias)=(0.005, 0.01)
+Model Saved: ../models/c-nnsvd-k50-e3-layers(1024, 128, None)-dropouts(0.0, 0.0, 0.0)-regs0.005,0.01-rmse0.897.h5
+RMSE training losses: [0.95264707189426578, 0.89940542434435344, 0.89718847924840572]
+RMSE validation losses: [0.96448058, 0.96268898, 0.96333605]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(1024, 128, None), Dropouts=(0.0, 0.0, 0.0), Validation=probe, Regularization (weights, bias)=(0.0025, 0.005)
+Model Saved: ../models/c-nnsvd-k50-e1-layers(1024, 128, None)-dropouts(0.0, 0.0, 0.0)-regs0.0025,0.005-rmse0.922.h5
+RMSE training losses: [0.92200502806313644]
+RMSE validation losses: [0.95600808]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(4096, 512, None), Dropouts=(0.7, 0.7, 0.7), Validation=probe, Regularization (weights, bias)=(0.0025, 0.005)
+Model Saved: ../models/c-nnsvd-k50-e1-layers(4096, 512, None)-dropouts(0.7, 0.7, 0.7)-regs0.0025,0.005-rmse0.915.h5
+RMSE training losses: [0.91512733382583933]
+RMSE validation losses: [0.96967214]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(4096, 512, None), Dropouts=(0.7, 0.7, 0.7), Validation=probe, Regularization (weights, bias)=(0.0025, 0.005)
+Model Saved: ../models/c-nnsvd-k50-e3-layers(4096, 512, None)-dropouts(0.7, 0.7, 0.7)-regs0.0025,0.005-rmse0.905.h5
+RMSE training losses: [0.91512733382583933, 0.90540511625824271, 0.90501472322602772]
+RMSE validation losses: [0.96967214, 0.95748013, 0.95678777]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=6, Layers=(4096, 512, None), Dropouts=(0.7, 0.7, 0.7), Validation=probe, Regularization (weights, bias)=(0.0025, 0.005)
+Model Saved: ../models/c-nnsvd-k50-e6-layers(4096, 512, None)-dropouts(0.7, 0.7, 0.7)-regs0.0025,0.005-rmse0.904.h5
+RMSE training losses: [0.91512733382583933, 0.90540511625824271, 0.90501472322602772, 0.90503663910088461, 0.90533980880671894, 0.90486562080213384]
+RMSE validation losses: [0.96967214, 0.95748013, 0.95678777, 0.95665497, 0.9998107, 0.9554401]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=10, Layers=(4096, 512, None), Dropouts=(0.7, 0.7, 0.7), Validation=probe, Regularization (weights, bias)=(0.0025, 0.005)
+Model Saved: ../models/c-nnsvd-k50-e10-layers(4096, 512, None)-dropouts(0.7, 0.7, 0.7)-regs0.0025,0.005-rmse0.904.h5
+RMSE training losses: [0.91512733382583933, 0.90540511625824271, 0.90501472322602772, 0.90503663910088461, 0.90533980880671894, 0.90486562080213384, 0.90457620036665876, 0.90447288434044737, 1.1234696973492755, 0.90473131413373165]
+RMSE validation losses: [0.96967214, 0.95748013, 0.95678777, 0.95665497, 0.9998107, 0.9554401, 0.95546478, 0.95490557, 0.9819051, 0.95954752]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(8192, 2048, None), Dropouts=(0.8, 0.8, 0.8), Validation=probe, Regularization (weights, bias)=(0.0025, 0.0025)
+Model Saved: ../models/c-nnsvd-k50-e1-layers(8192, 2048, None)-dropouts(0.8, 0.8, 0.8)-regs0.0025,0.0025-rmse0.940.h5
+RMSE training losses: [0.94014689382096961]
+RMSE validation losses: [0.96843982]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(8192, 2048, None), Dropouts=(0.8, 0.8, 0.8), Validation=probe, Regularization (weights, bias)=(0.0025, 0.0025)
+Model Saved: ../models/c-nnsvd-k50-e3-layers(8192, 2048, None)-dropouts(0.8, 0.8, 0.8)-regs0.0025,0.0025-rmse0.934.h5
+RMSE training losses: [0.94014689382096961, 0.93438719668173253, 0.93456528633261804]
+RMSE validation losses: [0.96843982, 0.9689256, 0.96646476]
+Intermediate Epochs Saved: {1, 3, 6}
