@@ -1,7 +1,7 @@
 Note: The line length of this log is purposely no limited to 80 chars. 
 
 Format of each entry:
-Directory of svd factors, k components, network iterations, network layers sizes, dropouts (if exist), validation dataset used
+Directory of svd factors, k components, network iterations, network layers sizes, dropouts (if exist), validation dataset used, whether hot vector is used (later logs)
 Path and name of trained model
 Training RMSE losses as list
 Testing RMSE losses as list (if not 1-to-1, it consists of (epoch #, loss))
@@ -212,4 +212,82 @@ SVD_Name=svd3, K=50, Epochs=3, Layers=(8192, 2048, None), Dropouts=(0.8, 0.8, 0.
 Model Saved: ../models/c-nnsvd-k50-e3-layers(8192, 2048, None)-dropouts(0.8, 0.8, 0.8)-regs0.0025,0.0025-rmse0.934.h5
 RMSE training losses: [0.94014689382096961, 0.93438719668173253, 0.93456528633261804]
 RMSE validation losses: [0.96843982, 0.9689256, 0.96646476]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(1024, 256, 64), Dropouts=(0.4, 0.4, 0.4), Validation=probe, Regularization (weights, bias)=(0.0005, 0.0005), Hot=True
+Model Saved: ../models/c-nnsvd-k50-e1-layers(1024, 256, 64)-dropouts(0.4, 0.4, 0.4)-regs0.0005,0.0005-rmse1.290.h5
+RMSE training losses: [1.2908294098498809]
+RMSE validation losses: [1.3160356]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(1024, 256, 64), Dropouts=(0.4, 0.4, 0.4), Validation=probe, Regularization (weights, bias)=(0.0005, 0.0005), Hot=True
+Model Saved: ../models/c-nnsvd-k50-e3-layers(1024, 256, 64)-dropouts(0.4, 0.4, 0.4)-regs0.0005,0.0005-rmse0.947.h5
+RMSE training losses: [1.2908294098498809, 1.0719634015157471, 0.94725111668582962]
+RMSE validation losses: [1.3160356, 1.3160397, 1.3191304]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(1024, 256, 64), Dropouts=(0.4, 0.4, 0.4), Validation=probe, Regularization (weights, bias)=(0.0005, 0.0005), Hot=True
+Model Saved: ../models/hot-c-nnsvd-k50-e1-layers(1024, 256, 64)-dropouts(0.4, 0.4, 0.4)-regs0.0005,0.0005-rmse1.512.h5
+RMSE training losses: [1.5121823207207792]
+RMSE validation losses: [1.316424]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(1024, 256, 64), Dropouts=(0.4, 0.4, 0.4), Validation=probe, Regularization (weights, bias)=(0.0005, 0.0005), Hot=True
+Model Saved: ../models/hot-c-nnsvd-k50-e3-layers(1024, 256, 64)-dropouts(0.4, 0.4, 0.4)-regs0.0005,0.0005-rmse1.148.h5
+RMSE training losses: [1.5121823207207792, 1.2583178656160061, 1.1480359901517272]
+RMSE validation losses: [1.316424, 1.6106426, 2.0778401]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(256, 64, None), Dropouts=(None, None, None), Validation=probe, Regularization (weights, bias)=(0.0, 0.0), Hot=True
+Model Saved: ../models/hot-c-nnsvd-k50-e1-layers(256, 64, None)-dropouts(None, None, None)-regs0.0,0.0-rmse1.871.h5
+RMSE training losses: [1.8717424644892307]
+RMSE validation losses: [2.1717563]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(256, 64, None), Dropouts=(None, None, None), Validation=probe, Regularization (weights, bias)=(0.0, 0.0), Hot=True
+Model Saved: ../models/hot-c-nnsvd-k50-e1-layers(256, 64, None)-dropouts(None, None, None)-regs0.0,0.0-rmse1.666.h5
+RMSE training losses: [1.6667863154703537]
+RMSE validation losses: [1.1440011]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(256, 64, None), Dropouts=(None, None, None), Validation=probe, Regularization (weights, bias)=(0.0, 0.0), Hot=True
+Model Saved: ../models/hot-c-nnsvd-k50-e1-layers(256, 64, None)-dropouts(None, None, None)-regs0.0,0.0-rmse1.924.h5
+RMSE training losses: [1.9249315967289524]
+RMSE validation losses: [1.2100049]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(256, 64, None), Dropouts=(None, None, None), Validation=probe, Regularization (weights, bias)=(0.0, 0.0), Hot=True
+Model Saved: ../models/hot-c-nnsvd-k50-e3-layers(256, 64, None)-dropouts(None, None, None)-regs0.0,0.0-rmse1.365.h5
+RMSE training losses: [1.9249315967289524, 1.4001017139417424, 1.365535596555151]
+RMSE validation losses: [1.2100049, 1.1535234, 1.1344422]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=6, Layers=(256, 64, None), Dropouts=(None, None, None), Validation=probe, Regularization (weights, bias)=(0.0, 0.0), Hot=True
+Model Saved: ../models/hot-c-nnsvd-k50-e6-layers(256, 64, None)-dropouts(None, None, None)-regs0.0,0.0-rmse1.323.h5
+RMSE training losses: [1.9249315967289524, 1.4001017139417424, 1.365535596555151, 1.3428228607157682, 1.3422731944445729, 1.3231406416034635]
+RMSE validation losses: [1.2100049, 1.1535234, 1.1344422, 1.1187339, 1.1109875, 1.1078757]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(2048, 512, 128), Dropouts=(None, None, None), Validation=probe, Regularization (weights, bias)=(0.0, 0.0), Hot=True
+Model Saved: ../models/hot-c-nnsvd-k50-e1-layers(2048, 512, 128)-dropouts(None, None, None)-regs0.0,0.0-rmse1.317.h5
+RMSE training losses: [1.3179318398229556]
+RMSE validation losses: [1.1011417]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(2048, 512, 128), Dropouts=(None, None, None), Validation=probe, Regularization (weights, bias)=(0.0, 0.0), Hot=True
+Model Saved: ../models/hot-c-nnsvd-k50-e3-layers(2048, 512, 128)-dropouts(None, None, None)-regs0.0,0.0-rmse1.199.h5
+RMSE training losses: [1.3179318398229556, 1.2429486024546452, 1.1996519325831636]
+RMSE validation losses: [1.1011417, 1.101987, 1.1139861]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=1, Layers=(4096, 512, 128), Dropouts=(0.7, 0.7, 0.7), Validation=probe, Regularization (weights, bias)=(0.005, 0.005), Hot=True
+Model Saved: ../models/hot-c-nnsvd-k50-e1-layers(4096, 512, 128)-dropouts(0.7, 0.7, 0.7)-regs0.005,0.005-rmse1.842.h5
+RMSE training losses: [1.8426649177176819]
+RMSE validation losses: [1.1501116]
+Intermediate Epochs Saved: {1, 3, 6}
+
+SVD_Name=svd3, K=50, Epochs=3, Layers=(4096, 512, 128), Dropouts=(0.7, 0.7, 0.7), Validation=probe, Regularization (weights, bias)=(0.005, 0.005), Hot=True
+Model Saved: ../models/hot-c-nnsvd-k50-e3-layers(4096, 512, 128)-dropouts(0.7, 0.7, 0.7)-regs0.005,0.005-rmse1.368.h5
+RMSE training losses: [1.8426649177176819, 1.3598598203548207, 1.3684306946968112]
+RMSE validation losses: [1.1501116, 1.1522489, 1.1688321]
 Intermediate Epochs Saved: {1, 3, 6}

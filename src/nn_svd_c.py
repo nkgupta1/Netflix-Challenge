@@ -1,3 +1,4 @@
+from os import listdir
 import tensorflow as tf
 import numpy as np
 import time
@@ -9,12 +10,13 @@ from keras.models import Sequential
 from keras import optimizers
 from keras.layers.core import Dense, Dropout
 from keras import regularizers
-from os import listdir
+from keras.utils.np_utils import to_categorical
+
 
 class NN:
     def __init__(self, mode='both', folder='svd3', biases=True, epochs=12, 
-        layers=(8192, 2048, None), dropouts=(0.8, 0.8, 0.8), valid_per=1, 
-        save_epochs=[1, 3, 6], w_reg=0.0025, b_reg=0.0025):
+        layers=(4096, 512, 128), dropouts=(.7, .7, .7), valid_per=1, 
+        save_epochs=[1, 3, 6], w_reg=0.005, b_reg=0.005, ratings_vector=True):
         '''
         Uses the svd latent factors in the folder data/arg:folder to train a 
         neural network along with indices and ratings in base (uses biases if 
@@ -35,10 +37,17 @@ class NN:
         self.epochs, self.layers, self.dropouts = epochs, layers, dropouts
         self.folder, self.biases = folder, biases
 
+        # if the ratings are trained as a hot vector, then we do not center 
+        # the predictions around zero no include biases
+        self.ratings_vector = ratings_vector
+        if self.ratings_vector:
+            self.biases = False
+            self.data_mean = 0.
+
         # number of blocks to split the data into b/c of memory limitations:
         # provides much better performance than swapping >20gb in/out while 
         # training. the optimal number is dependent on individual hardware
-        self.num_blocks = 8000
+        self.num_blocks = 4000
         
         # name of dataset to use for validation data
         self.valid_data = 'probe'
@@ -50,7 +59,7 @@ class NN:
         # epochs at which to save model (excluding final epoch)
         self.save_epochs = set(save_epochs)
 
-        predict = 'c-nnsvd-k50-e3-layers(3072, 512, 128)-dropouts(0.8, 0.8, 0.8)-rmse0.867'
+        predict = 'c-nnsvd-k50-e3-layers(1024, 256, 64)-dropouts(0.4, 0.4, 0.4)-regs0.0005,0.0005-rmse0.947'
         if mode == 'train':
             self.read_data()
             self.train()
@@ -232,6 +241,8 @@ class NN:
             ij = self.blocks_ij[block]
             trainx = np.concatenate((self.u[ij[:, 0]], self.v[ij[:, 1]]), axis=1)
             ratings = self.blocks_ratings[block]
+            if self.ratings_vector:
+                ratings = to_categorical(ratings - 1, 5)
             yield trainx, ratings
             block = (block + 1) % self.num_blocks
             if block == 0:
@@ -260,11 +271,16 @@ class NN:
                 b_regularizer=regularizers.l1(self.b_reg)))
                 if self.dropouts[l]:
                     self.model.add(Dropout(self.dropouts[l]))
-        # output layer   
-        self.model.add(Dense(1, activation='relu'))  
+        # output layer
+        if self.ratings_vector:
+            self.model.add(Dense(5, activation='relu'))
+            self.model.compile(loss='categorical_crossentropy', optimizer=optimizers.adam())
+        else:
+            self.model.add(Dense(1, activation='relu'))
+            # 'sgd' optimizer might not be a bad idea instead of adam:
+            self.model.compile(loss='mse', optimizer=optimizers.adam()) #lr=0.001     
         self.model.summary()  # double-check model format
-        # 'sgd' optimizer might not be a bad idea instead of adam:
-        self.model.compile(loss='mse', optimizer=optimizers.adam()) #lr=0.001   
+        
 
 
     def train(self):
@@ -275,7 +291,7 @@ class NN:
         '''
         self.make_model()
         self.rmse = RMSE(self.generate_validation, self.get_training_rmse, 
-            self.save_model, self.save_epochs, validate=self.valid_per)
+            self.save_model, self.save_epochs, self.valid_per, self.ratings_vector)
         self.model.fit_generator(self.generate_block(), 
             samples_per_epoch=self.num_points, nb_epoch=self.epochs, 
             verbose=True, callbacks=[self.rmse])
@@ -293,7 +309,11 @@ class NN:
             epochs = mid_epoch
         else:
             epochs = self.epochs
-        self.model_name = ('c-nnsvd-k'+ str(self.K) + '-e' + str(epochs) 
+        if self.ratings_vector:
+            hot = 'hot-'
+        else:
+            hot = ''
+        self.model_name = (hot + 'c-nnsvd-k' + str(self.K) + '-e' + str(epochs) 
             + '-layers' + str(self.layers) + '-dropouts' + str(self.dropouts) 
             + '-regs' + str(self.w_reg) + ',' + str(self.b_reg)
             + '-rmse' + str(self.rmse.losses[-1])[:5] + '.h5')
@@ -305,7 +325,8 @@ class NN:
             ', Epochs=' + str(epochs) + ', Layers=' + str(self.layers) + 
             ', Dropouts=' + str(self.dropouts) + ', Validation=' + 
             self.valid_data + ', Regularization (weights, bias)=' + 
-            str((self.w_reg, self.b_reg)) + '\nModel Saved: ' + filename + 
+            str((self.w_reg, self.b_reg)) + ', Hot=' + str(self.ratings_vector) 
+            + '\nModel Saved: ' + filename + 
             '\nRMSE training losses: ' + 
             str(self.rmse.losses) + '\nRMSE validation losses: ' + 
             str(self.rmse.validation_losses) + '\n')
@@ -327,8 +348,11 @@ class NN:
         testx = np.concatenate((self.u[qual_ij[:, 0]], self.v[qual_ij[:, 1]]), axis=1)
 
         print('making predictions...', testx.shape)
-        qual_ratings = self.model.predict(testx)[:, 0]
-
+        qual_ratings = self.model.predict(testx)
+        if self.ratings_vector:
+            qual_ratings = (np.argmax(qual_ratings, axis=1) + 1).astype(np.float32)
+        else:
+            qual_ratings = qual_ratings[:, 0]
         # undo pre-processing with means using self.data_mean, self.a, self.b
         print('adjusting predictions...', qual_ratings.shape)
         qual_ratings += self.data_mean
@@ -366,7 +390,8 @@ class RMSE(keras.callbacks.Callback):
     epochs given by arg:validate of init(). If self.validate is zero, it 
     does not record validation error.
     '''
-    def __init__(self, generate_testx, train_rmse, save, save_epochs, validate):
+    def __init__(self, generate_testx, train_rmse, save, save_epochs, 
+        validate, ratings_vector):
         '''
         Uses arg:generate_testx function to generation test validation 
         data. Uses arg:train_rmse function to generating training 
@@ -379,6 +404,7 @@ class RMSE(keras.callbacks.Callback):
         self.validate = validate
         # period of iterations between saving model using self.save()
         self.save, self.save_epochs = save, save_epochs
+        self.ratings_vector = ratings_vector
 
         self.get_training_rmse = train_rmse
         if not validate:
@@ -397,8 +423,12 @@ class RMSE(keras.callbacks.Callback):
         '''
         Print training (in-sample) RMSE and append to history self.losses
         '''
-        rmse = np.sqrt(logs.get('loss'))
-        print('\nTraining RMSE:', rmse)
+        rmse = logs.get('loss')
+        if not self.ratings_vector:
+            rmse = np.sqrt(rmse)
+            print('\nTraining RMSE:', rmse)
+        else:
+            print('')
         self.losses.append(rmse)
         if self.validate and (self.e % self.validate) == 0:
             self.get_validation_rmse()
@@ -412,7 +442,11 @@ class RMSE(keras.callbacks.Callback):
         Print validation (out-of-sample) RMSE and append to history 
         self.validation_losses.
         '''
-        predictions = self.model.predict(self.testx)[:, 0]
+        predictions = self.model.predict(self.testx)
+        if self.ratings_vector:
+            predictions = (np.argmax(predictions, axis=1) + 1).astype(np.float32)
+        else:
+            predictions = predictions[:, 0]
         rmse = np.sqrt(np.mean((predictions - self.valid_ratings) ** 2))
         print('Validation RMSE:', rmse)
         if self.validate == 1:
