@@ -3,6 +3,7 @@
 
 using namespace std;
 
+
 float dot_product(float **U, int i, float **V, int j) {
     /*
      * Takes the dot product of 2 rows of U and V.
@@ -15,13 +16,20 @@ float dot_product(float **U, int i, float **V, int j) {
     return dot_prod;
 }
 
-float get_err(float **U, float **V, float **Y, int num_pts, float reg) {
+float prediction(svd_data *data, int i, int j) {
+    /*
+     * generates a prediction based on trained matrices
+     */
+    float dot_prod = dot_product(data->U, i, data->V, j);
+    return dot_prod + data->a[i] + data->b[j] + MEAN;
+}
+
+float get_err(svd_data *data, float **Y, int num_pts, float reg) {
     /*
      * Get the squared error of U*V^T on Y.
      */
     double err = 0.0;
-    float dot_prod;
-    float i, j, Yij;
+    float i, j, Yij, pred;
 
     // calculate the mean squared error on each training point
     for (int ind = 0; ind < num_pts; ind++) {
@@ -29,9 +37,9 @@ float get_err(float **U, float **V, float **Y, int num_pts, float reg) {
         j    = Y[ind][1];
         Yij  = Y[ind][3];
 
-        dot_prod = dot_product(U, i-1, V, j-1);
+        pred = prediction(data, i-1, j-1);
 
-        err += (Yij - dot_prod) * (Yij - dot_prod);
+        err += (Yij - pred) * (Yij - pred);
     }
 
     // if reg is not 0, then we are using this error for training so include
@@ -42,21 +50,33 @@ float get_err(float **U, float **V, float **Y, int num_pts, float reg) {
 
         double U_frob_norm = 0.0;
         double V_frob_norm = 0.0;
+        double a_frob_norm = 0.0;
+        double b_frob_norm = 0.0;
 
         for (int i = 0; i < M; i++) {
             for (int j = 0; j < K; j++) {
-                U_frob_norm += U[i][j] * U[i][j];
+                U_frob_norm += data->U[i][j] * data->U[i][j];
             }
         }
 
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < K; j++) {
-                V_frob_norm += V[i][j] * V[i][j];
+                V_frob_norm += data->V[i][j] * data->V[i][j];
             }
+        }
+
+        for (int i = 0; i < M; i++) {
+            a_frob_norm += data->a[i] * data->a[i];
+        }
+
+        for (int i = 0; i < N; i++) {
+            b_frob_norm += data->b[i] * data->b[i];
         }
 
         err += 0.5 * reg * U_frob_norm;
         err += 0.5 * reg * V_frob_norm;
+        err += 0.5 * reg * a_frob_norm;
+        err += 0.5 * reg * b_frob_norm;
     } else {
         // if reg is 0, we are using this error for testing so want RMSE error
         err /= num_pts;
@@ -75,7 +95,10 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
      * Train an SVD model using SGD.
      *
      * Factorizes a sparse M x N matrix in the product of a M x K matrix and a N
-     * x K matrix such that Y = U * V^T
+     * x K matrix such that Y = U * V^T + a + b
+     *
+     * a is user biases
+     * b is movie biases
      *
      * eta is the learning rate.
      * reg is the regularization
@@ -98,6 +121,9 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
         V[i] = new float[K];
     }
 
+    float *a = new float[M];
+    float *b = new float[N];
+
     // populate with random values
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < K; j++) {
@@ -117,25 +143,45 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
         }
     }
 
+    for (int i = 0; i < M; i++) {
+        float r = static_cast <float> (rand());
+        r = r / static_cast <float> (RAND_MAX);
+        r = r - 0.5;
+        a[i] = r;
+    }
+
+    for (int i = 0; i < N; i++) {
+        float r = static_cast <float> (rand());
+        r = r / static_cast <float> (RAND_MAX);
+        r = r - 0.5;
+        b[i] = r;
+    }
+
     svd_data *toRet = (svd_data*)malloc(sizeof(svd_data));
     toRet->U = U;
     toRet->V = V;
-
-    printf("done creating matrices...\n\n");
+    toRet->a = a;
+    toRet->b = b;
 
     // so we can randomly go over all the points
-    // int *indicies = new int[NUM_PTS];
-    // for (int i = 0; i < NUM_PTS; i++) {
-    //     indicies[i] = i;
-    // }
+    int *indices = new int[NUM_TRAIN_PTS];
+    for (int i = 0; i < NUM_TRAIN_PTS; i++) {
+        indices[i] = i;
+    }
 
     ////////////////////////////////////////////////////////////////////////////
 
+    // scales eta by this every epoch
+    float adaptive_learning_rate = 0.9;
+
     float delta = 0.0;
+    int ind;
     int i, j, date, Yij;
-    float dot_prod;
+    float pred;
     float before_E_in, E_in, E_out;
     float min_E_out = 100;
+    int num_grad_issues = 0;
+    float org_eta = eta;
     // this variable contains the number of times that E_out has consecutively
     // gone up
     int count_E_out_up = 0;
@@ -143,12 +189,15 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
     printf("starting training....\n");
 
     for (int epoch = 0; epoch < max_epochs; epoch++) {
-        before_E_in = get_err(U, V, Y_train, NUM_TRAIN_PTS, 0);
+        // before_E_in = get_err(toRet, Y_train, NUM_TRAIN_PTS, 0);
+
+        num_grad_issues = 0;
 
         // takes 9 seconds
-        // random_shuffle(&indicies[0], &indicies[NUM_TRAIN_PTS-1]);
+        random_shuffle(&indices[0], &indices[NUM_TRAIN_PTS-1]);
 
-        for (int ind = 0; ind < NUM_TRAIN_PTS; ind++) {
+        for (int ind_ind = 0; ind_ind < NUM_TRAIN_PTS; ind_ind++) {
+            ind = indices[ind_ind];
             i    = Y_train[ind][0];
             j    = Y_train[ind][1];
             date = Y_train[ind][2];
@@ -156,31 +205,50 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
 
             // so compiler doesn't generate warnings
             (void)date;
+            (void)delta;
+            (void)before_E_in;
 
-            dot_prod = dot_product(U, i-1, V, j-1);
+            pred = prediction(toRet, i-1, j-1);
+            if (pred < -100) {
+                // printf("gradient issues!!!\n");
+                num_grad_issues++;
+                continue;
+            }
 
             // update U
             for (int k = 0; k < K; k++) {
-                U[i-1][k] += eta*V[j-1][k]*(Yij - dot_prod) - reg*eta*U[i-1][k];
+                U[i-1][k] += eta*(V[j-1][k]*(Yij - pred) - reg*U[i-1][k]);
             }
             
             // update V
             for (int k = 0; k < K; k++) {
-                V[j-1][k] += eta*U[i-1][k]*(Yij - dot_prod) - reg*eta*V[j-1][k];
+                V[j-1][k] += eta*(U[i-1][k]*(Yij - pred) - reg*V[j-1][k]);
             }
+
+            // update a
+            a[i-1] += eta*((Yij - pred) - reg*a[i-1]);
+
+            // update b
+            b[j-1] += eta*((Yij - pred) - reg*b[j-1]);
 
         }
 
+        if (num_grad_issues != 0)
+            printf("num grad issues: %d\n", num_grad_issues);
+
         // get the error for the epoch
-        E_in  = get_err(U, V, Y_train, NUM_TRAIN_PTS, 0);
-        E_out = get_err(U, V, Y_test, NUM_TEST_PTS, 0);
-        printf("iteration %3d:\tE_in: %1.5f\tE_out: %1.5f\n", epoch, E_in, E_out);
+        E_in  = get_err(toRet, Y_train, NUM_TRAIN_PTS, 0);
+        E_out = get_err(toRet, Y_test, NUM_TEST_PTS, 0);
+
+        printf("iteration %3d:\tE_in: %1.5f\tE_out: %1.5f\tdel E_out: %1.7f\tdel E\'s: %1.7f\n", 
+            epoch, E_in, E_out, min_E_out - E_out, E_out - E_in);
 
         if (E_out < min_E_out) {
             min_E_out = E_out;
             count_E_out_up = 0;
-            save_matrices(toRet, E_out, eta, reg, epoch);
+            save_matrices(toRet, E_out, org_eta, reg, epoch);
         } else {
+            eta = adaptive_learning_rate * eta;
             count_E_out_up++;
             if (count_E_out_up > 4) {
                 break;
@@ -188,11 +256,11 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
         }
 
         // check termination condition
-        if (epoch == 0) {
-            delta = before_E_in - E_in;
-        } else if (before_E_in - E_in < eps * delta) {
-              break;          
-        }
+        // if (epoch == 0) {
+        //     delta = before_E_in - E_in;
+        // } else if (before_E_in - E_in < eps * delta) {
+        //       break;          
+        // }
 
     }
 
@@ -211,7 +279,6 @@ float **read_data(const string file, int num_pts) {
      * Read in data for training or test.
      * In format:
      *     user, movie, date, rating
-     *     user, movie, date, rating
      */
     
     printf("reading in data...\n");
@@ -224,15 +291,17 @@ float **read_data(const string file, int num_pts) {
 
     // read in the data
     ifstream datafile(file);
-    float u, m, d, r;
+    int u, m, d, r;
     for (int i = 0; i < num_pts; i++) {
         datafile >> u >> m >> d >> r;
 
-        Y[i][0] = u;
-        Y[i][1] = m;
-        Y[i][2] = d;
-        Y[i][3] = r;
+        Y[i][0] = (float)u;
+        Y[i][1] = (float)m;
+        Y[i][2] = (float)d;
+        Y[i][3] = (float)r;
+
     }
+
     datafile.close();
     printf("done reading in data...\n\n");
     return Y;
@@ -253,6 +322,8 @@ void save_matrices(svd_data *data, float err, float eta, float reg, int max_epoc
 
     ofstream u_file(file_base + "_u.mat");
     ofstream v_file(file_base + "_v.mat");
+    ofstream a_file(file_base + "_a.mat");
+    ofstream b_file(file_base + "_b.mat");
 
     // save the user matrix
     for (int i = 0; i < M; i++) {
@@ -270,10 +341,23 @@ void save_matrices(svd_data *data, float err, float eta, float reg, int max_epoc
         v_file << "\n";
     }
 
+    // save user biases
+    for (int i = 0; i < M; i++) {
+        a_file << data->a[i] << " ";
+    }
+
+    // save movie biases
+    for (int i = 0; i < N; i++) {
+        b_file << data->b[i] << " ";
+    }
+
     // clean up
     u_file.close();
     v_file.close();
-    printf("saved data...\n");
+    a_file.close();
+    b_file.close();
+
+    // printf("saved data...\n");
 }
 
 svd_data* load_matrices(const string file_base) {
@@ -283,6 +367,8 @@ svd_data* load_matrices(const string file_base) {
      */
     ifstream u_file(file_base + "_u.mat");
     ifstream v_file(file_base + "_v.mat");
+    ifstream a_file(file_base + "_a.mat");
+    ifstream b_file(file_base + "_b.mat");
 
     float ** U = new float*[M];
     for (int i = 0; i < M; i++) {
@@ -294,11 +380,16 @@ svd_data* load_matrices(const string file_base) {
         V[i] = new float[K];
     }
 
+    float *a = new float[M];
+    float *b = new float[N];
+
     svd_data *toRet = (svd_data*)malloc(sizeof(svd_data));
     toRet->U = U;
     toRet->V = V;
+    toRet->a = a;
+    toRet->b = b;
 
-    // populate with random values
+    // populate with saved values
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < K; j++) {
             u_file >> U[i][j];
@@ -311,13 +402,23 @@ svd_data* load_matrices(const string file_base) {
         }
     }
 
+    for (int i = 0; i < M; i++) {
+        a_file >> a[i];
+    }
+
+    for (int i = 0; i < M; i++) {
+        b_file >> b[i];
+    }
+
     u_file.close();
     v_file.close();
+    a_file.close();
+    b_file.close();
 
     return toRet;
 }
 
-void predict(svd_data *data, float err, float eta, float reg, int max_epochs) {
+void predict(svd_data *data, const string fbase) {
     /*
      * Given the matrices and their parameters, creates predictions and saves
      * them using a standard format.
@@ -329,17 +430,12 @@ void predict(svd_data *data, float err, float eta, float reg, int max_epochs) {
     float **Y;
     Y = read_data("../../data/um/qual_all.dta", NUM_QUAL_PTS);
 
-    // create filename
-    string pred_name = "predictions/" + to_string(err) + "_" + to_string(K) +
-                       "_" + to_string(eta) + "_" + to_string(reg) + "_" +
-                       to_string(max_epochs) + "_pred.txt";
-
-    ofstream ofs(pred_name);
+    ofstream ofs(fbase + "_pred.txt");
 
     // generate and output predictions
     float pred = 0.;
     for (int ind = 0; ind < NUM_QUAL_PTS; ind++) {
-        pred = dot_product(data->U, Y[ind][0] - 1, data->V, Y[ind][1] - 1);
+        pred = prediction(data, Y[ind][0] - 1, Y[ind][1] - 1);
         if (pred < 1)
             pred = 1;
         if (pred > 5)
@@ -358,10 +454,10 @@ void predict(svd_data *data, float err, float eta, float reg, int max_epochs) {
 int main(int argc, char **argv) {
 
     // training parameters
-    float eta = 0.001;
-    float reg = 0.01;
+    float eta = 0.01;
+    float reg = 0.075;
     float eps = 0.00001;
-    int max_epochs = 20;
+    int max_epochs = 100;
 
     printf("eta: %f\nreg: %f\neps: %f\nepochs: %d\nlatent factors: %d\n\n",
             eta, reg, eps, max_epochs, K);
@@ -373,7 +469,7 @@ int main(int argc, char **argv) {
 
     // read in the test data
     float **Y_test;
-    Y_test = read_data("../../data/um/valid_all.dta", NUM_TEST_PTS);
+    Y_test = read_data("../../data/um/probe_all.dta", NUM_TEST_PTS);
 
 
 
@@ -382,31 +478,22 @@ int main(int argc, char **argv) {
     matrices = train_model(eta, reg, Y_train, Y_test, eps, max_epochs);
 
     // load matrices
-    // matrices = load_matrices("models/0.921953_50_0.001000_0.010000_9");
+    // matrices = load_matrices("models/0.928542_50_0.007000_0.050000_26");
 
     // get the out-sample error
-    float err = get_err(matrices->U, matrices->V, Y_test, NUM_TEST_PTS, 0);
-    printf("%f\n", err);
+    float err = get_err(matrices, Y_test, NUM_TEST_PTS, 0);
+    printf("final error: %f\n", err);
 
     // save the matrices
     save_matrices(matrices, err, eta, reg, max_epochs);
 
+    string file_base = "predictions/" + to_string(err) + "_" + to_string(K) + "_" +
+                       to_string(eta) + "_" + to_string(reg) + "_" +
+                       to_string(max_epochs);
+
     // make predictions
-    predict(matrices, err, eta, reg, max_epochs);
+    predict(matrices, file_base);
 
-
-    // CLEAN UP
-    // for (int i = 0; i < NUM_TRAIN_PTS; i++) {
-    //     delete Y_train[i];
-    // }
-    // delete[] Y_train;
-
-    // for (int i = 0; i < NUM_TEST_PTS; i++) {
-    //     delete Y_test[i];
-    // }
-    // delete[] Y_test;
-
-    // should clean up U and V too....
 
     return 0;
 }
