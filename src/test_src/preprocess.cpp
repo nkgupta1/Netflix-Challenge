@@ -42,8 +42,8 @@ void Processing::split(const string data, const string ids) {
 
     // Output files
     ofstream base(dir + "/base_" + file);
-    ofstream valid(dir + "/valid_" + file);
-    ofstream hidden(dir + "/hidden_" + file);
+    // ofstream valid(dir + "/valid_" + file);
+    // ofstream hidden(dir + "/hidden_" + file);
     ofstream probe(dir + "/probe_" + file);
     ofstream qual(dir + "/qual_" + file);
 
@@ -52,9 +52,9 @@ void Processing::split(const string data, const string ids) {
         if        (id == 1) {
             base << u << " " << m << " " << d << " " << r << "\n";
         } else if (id == 2) {
-            valid << u << " " << m << " " << d << " " << r << "\n";
+            base << u << " " << m << " " << d << " " << r << "\n";
         } else if (id == 3) {
-            hidden << u << " " << m << " " << d << " " << r << "\n";
+            base << u << " " << m << " " << d << " " << r << "\n";
         } else if (id == 4) {
             probe << u << " " << m << " " << d << " " << r << "\n";
         } else if (id == 5) {
