@@ -12,6 +12,8 @@
 
 #include <cmath>
 #include <unistd.h>
+#include <assert.h>
+#include <algorithm>
 
 #include "util.hpp"
 
@@ -115,13 +117,11 @@ public:
     // TRAIN
 
     // Overall function
-    void train(int start, int stop, int steps);
+    void train(int start, int stop, int steps, int *rand_array);
     // Input -> Hidden
     void forward(float **input, float *hidden, int num_mov, bool dis);
     // Hidden -> Input
     void backward(float **input, float *hidden, int num_mov, bool dis);
-    // Change momentum; useful when training progresses
-    void set_mom(float new_mom);
 
     // VALIDATE
     float validate(int start, int stop, int *dta, int *dta_ids);
