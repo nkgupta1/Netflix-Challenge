@@ -142,9 +142,9 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
         V[i] = new float[K];
     }
 
-    float ** X = new float*[N];
-    for (int i = 0; i < N; i++) {
-        X[i] = new float[K];
+    float ** X = new float*[K];
+    for (int i = 0; i < K; i++) {
+        X[i] = new float[N];
     }
 
     float ** X_sum = new float*[M];
@@ -153,6 +153,7 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
     }
 
     float *X_norm = new float[M];
+    float *X_temp_updates = new float[K];
     int *movie_counts = new int[M];
     float *a = new float[M];
     float *b = new float[N];
@@ -172,8 +173,8 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
         }
     }
 
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < K; j++) {
+    for (int i = 0; i < K; i++) {
+        for (int j = 0; j < N; j++) {
             X[i][j] = rand_num();;
         }
     }
@@ -212,7 +213,7 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
         // count the number of movies each user has rated
         movie_counts[user-1]++;
         for (int k = 0; k < K; k++) {
-            X_sum[user-1][k] += X[movie-1][k];
+            X_sum[user-1][k] += X[k][movie-1];
         }
     }
 
@@ -266,12 +267,11 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
 
     // float delta = 0.0;
     int ind;
-    int date, Yij;
-    float pred, old_U, old_V, norm, old_sum, update;
+    int date, Yij, prev_user;
+    float pred_err, old_U, old_V, norm, old_sum, update;
     // float before_E_in;
     float E_in, E_out;
     float min_E_out = 100;
-    int num_grad_issues = 0;
     float org_eta = eta;
     // this variable contains the number of times that E_out has consecutively
     // gone up
@@ -282,29 +282,44 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
     for (int epoch = 0; epoch < max_epochs; epoch++) {
         // before_E_in = get_err(toRet, Y_train, NUM_TRAIN_PTS, 0);
 
-        num_grad_issues = 0;
+        // num_grad_issues = 0;
+        prev_user = -1;
+        for (int i = 0; i < K; i++) {
+            X_temp_updates[i] = 0;
+        }
 
 
         for (int ind_ind = 0; ind_ind < NUM_TRAIN_PTS; ind_ind++) {
-            if (ind_ind % 1000000 == 0)
-                printf("%d done...\n", ind_ind);
             ind   = indices[ind_ind];
             user  = Y_train[ind][0];
             movie = Y_train[ind][1];
             date  = Y_train[ind][2];
             Yij   = Y_train[ind][3];
 
+            if (user - 1 != prev_user - 1 && prev_user != -1) {
+                // update each movie that this user rated
+                for (int k = 0; k < K; k++) {
+                    for (int i = 0; i < movie_counts[prev_user-1]; i++) {
+                        update = eta*(X_temp_updates[k] - reg*X[k][list_movies[prev_user-1][i]]);
+
+                        X[k][list_movies[prev_user-1][i]] += update;
+                        X_sum[prev_user-1][k] += update;
+                    }
+
+                    // now that we have updated the cumulated updates for the
+                    // movies, we can reset the updates as we move onto the next
+                    // user
+                    X_temp_updates[k] = 0.;
+
+                }
+            }
+
             // so compiler doesn't generate warnings
             (void)date;
             // (void)delta;
             // (void)before_E_in;
 
-            pred = prediction(toRet, user-1, movie-1);
-            if (pred < -100) {
-                // printf("gradient issues!!!\n");
-                num_grad_issues++;
-                continue;
-            }
+            pred_err = Yij - prediction(toRet, user-1, movie-1);
 
             for (int k = 0; k < K; k++) {
                 old_U = U[user-1][k];
@@ -313,31 +328,28 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
                 old_sum = X_sum[user-1][k];
 
                 // update user matrix
-                U[user-1][k] += eta*(old_V*(Yij - pred) - reg*old_U);
+                U[user-1][k] += eta*(old_V*pred_err - reg*old_U);
 
                 // update movie matrix
-                V[movie-1][k] += eta*((old_U + norm*old_sum)*(Yij - pred) - reg*old_V);
+                V[movie-1][k] += eta*((old_U + norm*old_sum)*pred_err - reg*old_V);
 
-                // update each movie that this user rated
-                for (int i = 0; i < movie_counts[user-1]; i++) {
-                    update = eta*((Yij - pred)*norm*old_V - reg*X[list_movies[user-1][i]][k]);
-
-                    X[list_movies[user-1][i]][k] += update;
-                    X_sum[user-1][k] += update;
-                }
+                // update our temp update vector for X because it is too slow to
+                // update it every time. won't get the same accuracy but makes
+                // it much quicker...
+                X_temp_updates[k] += pred_err * norm * old_V;
             }
 
             
             // update a
-            a[user-1] += eta*((Yij - pred) - reg*a[user-1]);
+            a[user-1] += eta*(pred_err - reg*a[user-1]);
 
             // update b
-            b[movie-1] += eta*((Yij - pred) - reg*b[movie-1]);
+            b[movie-1] += eta*(pred_err - reg*b[movie-1]);
 
         }
 
-        if (num_grad_issues != 0)
-            printf("num grad issues: %d\n", num_grad_issues);
+        // if (num_grad_issues != 0)
+            // printf("num grad issues: %d\n", num_grad_issues);
 
         // get the error for the epoch
         E_in  = get_err(toRet, Y_train, NUM_TRAIN_PTS, 0);
@@ -425,6 +437,9 @@ void save_matrices(svd_data *data, float err, float eta, float reg, int max_epoc
 
     ofstream u_file(file_base + "_u.mat");
     ofstream v_file(file_base + "_v.mat");
+    ofstream x_file(file_base + "_x.mat");
+    ofstream x_sum_file(file_base + "_x_sum.mat");
+    ofstream x_norm_file(file_base + "_x_norm.mat");
     ofstream a_file(file_base + "_a.mat");
     ofstream b_file(file_base + "_b.mat");
 
@@ -444,6 +459,25 @@ void save_matrices(svd_data *data, float err, float eta, float reg, int max_epoc
         v_file << "\n";
     }
 
+    // save the various implicit factor matrices
+    for (int i = 0; i < K; i++) {
+        for (int j = 0; j < N; j++) {
+            x_file << data->X[i][j] << " ";
+        }
+        x_file << "\n";
+    }
+
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < K; j++) {
+            x_sum_file << data->X_sum[i][j] << " ";
+        }
+        x_sum_file << "\n";
+    }
+
+    for (int i = 0; i < M; i++) {
+        x_norm_file << data->X_norm[i] << " ";
+    }
+
     // save user biases
     for (int i = 0; i < M; i++) {
         a_file << data->a[i] << " ";
@@ -457,6 +491,9 @@ void save_matrices(svd_data *data, float err, float eta, float reg, int max_epoc
     // clean up
     u_file.close();
     v_file.close();
+    x_file.close();
+    x_sum_file.close();
+    x_norm_file.close();
     a_file.close();
     b_file.close();
 
@@ -470,6 +507,9 @@ svd_data* load_matrices(const string file_base) {
      */
     ifstream u_file(file_base + "_u.mat");
     ifstream v_file(file_base + "_v.mat");
+    ifstream x_file(file_base + "_x.mat");
+    ifstream x_sum_file(file_base + "_x_sum.mat");
+    ifstream x_norm_file(file_base + "_x_norm.mat");
     ifstream a_file(file_base + "_a.mat");
     ifstream b_file(file_base + "_b.mat");
 
@@ -483,12 +523,27 @@ svd_data* load_matrices(const string file_base) {
         V[i] = new float[K];
     }
 
+    float ** X = new float*[K];
+    for (int i = 0; i < K; i++) {
+        X[i] = new float[N];
+    }
+
+    float ** X_sum = new float*[M];
+    for (int i = 0; i < M; i++) {
+        X_sum[i] = new float[K];
+    }
+
+    float *X_norm = new float[M];
+
     float *a = new float[M];
     float *b = new float[N];
 
     svd_data *toRet = (svd_data*)malloc(sizeof(svd_data));
     toRet->U = U;
     toRet->V = V;
+    toRet->X = X;
+    toRet->X_sum = X_sum;
+    toRet->X_norm = X_norm;
     toRet->a = a;
     toRet->b = b;
 
@@ -505,6 +560,22 @@ svd_data* load_matrices(const string file_base) {
         }
     }
 
+    for (int i = 0; i < K; i++) {
+        for (int j = 0; j < N; j++) {
+            x_file >> X[i][j];
+        }
+    }
+
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < K; j++) {
+            x_sum_file >> X_sum[i][j];
+        }
+    }
+
+    for (int i = 0; i < M; i++) {
+        x_norm_file >> X_norm[i];
+    }
+
     for (int i = 0; i < M; i++) {
         a_file >> a[i];
     }
@@ -515,6 +586,9 @@ svd_data* load_matrices(const string file_base) {
 
     u_file.close();
     v_file.close();
+    x_file.close();
+    x_sum_file.close();
+    x_norm_file.close();
     a_file.close();
     b_file.close();
 
@@ -557,8 +631,8 @@ void predict(svd_data *data, const string fbase) {
 int main(int argc, char **argv) {
 
     // training parameters
-    float eta = 0.01;
-    float reg = 0.075;
+    float eta = 0.007;
+    float reg = 0.015;
     float eps = 0.00001;
     int max_epochs = 100;
 
@@ -588,7 +662,7 @@ int main(int argc, char **argv) {
     printf("final error: %f\n", err);
 
     // save the matrices
-    save_matrices(matrices, err, eta, reg, max_epochs);
+    // save_matrices(matrices, err, eta, reg, max_epochs);
 
     string file_base = "predictions/" + to_string(err) + "_" + to_string(K) + "_" +
                        to_string(eta) + "_" + to_string(reg) + "_" +
