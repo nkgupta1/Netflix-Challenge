@@ -383,6 +383,7 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
 
 
     // clean up
+    delete X_temp_updates;
     // delete[] indicies;
 
     return toRet;
@@ -632,7 +633,7 @@ int main(int argc, char **argv) {
 
     // training parameters
     float eta = 0.007;
-    float reg = 0.015;
+    float reg = 0.05;
     float eps = 0.00001;
     int max_epochs = 100;
 

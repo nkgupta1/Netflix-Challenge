@@ -10,11 +10,11 @@
 #define N 17770     // number of movies
 #define K 200       // number of latent factors
 
-#define NUM_TRAIN_PTS  94362233   // number of ratings
+#define NUM_TRAIN_PTS  98291669   // number of ratings
 #define NUM_TEST_PTS   1374739    // number of ratings
 #define NUM_QUAL_PTS   2749898    // number of qual points
 
-#define MEAN 3.608609
+#define MEAN 3.608613
 
 using namespace std;
 
