@@ -8,7 +8,7 @@
 
 #define M 458293    // number of users
 #define N 17770     // number of movies
-#define K 150       // number of latent factors
+#define K 250       // number of latent factors
 
 #define NUM_TRAIN_PTS  98291669   // number of ratings
 #define NUM_TEST_PTS   1374739    // number of ratings
@@ -21,17 +21,23 @@ using namespace std;
 struct svd_data {
     float **U;
     float **V;
+    float **X;
+    float **X_sum;
+    float *X_norm;
     float *a;
     float *b;
 } ;
 
 static inline
-float dot_product(float **U, int i, float **V, int j);
+float dot_product(float **U, float *X_norm, float **X_sum, int i, float **V, int j);
 
 static inline
 float prediction(svd_data *data, int i, int j);
 
 float get_err(float **U, float **V, float *a, float *b, int **Y, int num_pts, float reg);
+
+static inline
+float rand_num();
 
 svd_data* train_model(float eta, float reg, float **Y, float eps,
                       int max_epochs);
@@ -43,4 +49,5 @@ void save_matrices(svd_data *data, float err, float eta, float reg, int max_epoc
 svd_data* load_matrices(const string fbase);
 
 void predict(svd_data *data, float err, float eta, float reg, int max_epochs);
+
 
