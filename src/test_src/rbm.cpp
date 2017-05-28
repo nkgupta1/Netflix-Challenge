@@ -713,7 +713,7 @@ void run_rbm(const string file, const string v_file, int hidden, float learning_
     }
     // rbm.train(1,1000,3);
     // rbm.predict(fname,outname,1,U);
-    float init_rmse = rbm.validate();
+    // float init_rmse = rbm.validate();
     // printf("%f\n", init_rmse);
     // RBM rbm = RBM(save_name);
     printf("RBM Created.\n");

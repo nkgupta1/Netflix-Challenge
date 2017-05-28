@@ -8,7 +8,7 @@ from keras.layers.core import Dense
 
 
 class NN:
-    def __init__(self, mode='train', K=5, epochs=1):
+    def __init__(self, mode='both', K=5, epochs=1):
         self.num_users = 458293
         self.data_mean = 3.60860891887339
         self.K, self.epochs = K, epochs
@@ -22,11 +22,11 @@ class NN:
         elif mode == 'predict':
             self.make_model()
             self.model.load_weights('../models/nn-k20-e20-rmse0.877.h5')  # add model name here
-            self.predict(save_name='nn20-20')
+            self.predict('nn20-20')
         elif mode == 'both':
             self.train()
             self.save_model()
-            self.predict()
+            self.predict('probe-nnfactor')
 
 
     def read_data(self):
@@ -82,7 +82,7 @@ class NN:
             + '-rmse' + str(self.rmse.losses[-1])[:5] + '.h5')
 
 
-    def predict(self, save_name='latest-nn'):
+    def predict(self, save_name):
         print('predicting from model...')
         qual = read_arr('qual')
         qual_ratings = []
