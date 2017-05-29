@@ -48,3 +48,5 @@ def read_mat(name):
     print(name + ' imported mat[user, movie]:', data.shape, data.dtype)
     return data
 
+if __name__=='__main__':
+    write_arrs()
