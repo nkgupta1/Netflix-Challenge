@@ -113,8 +113,9 @@ class PMF:
                 # Print info
                 if batch == self.num_batches - 1:
                     print 'Training RMSE: %f, Test RMSE %f' % (self.err_train[-1], self.err_val[-1])
-                    self.save_name = 'e%d-t%.3f-v%.3f' % (self.epoch, self.err_train[-1], self.err_val[-1])
-                    # self.submission()
+                    self.save_name = '-e%d-t%.3f-v%.3f' % (self.epoch, self.err_train[-1], self.err_val[-1])
+                    self.submission('qual')
+                    self.submission('probe')
 
 
     def predict(self, invID): 
@@ -130,9 +131,9 @@ class PMF:
             self.num_batches = parameters.get("num_batches", 10)
             self.batch_size = parameters.get("batch_size", 1000)
 
-    def submission(self):
+    def submission(self, source):
         print('predicting from model...')
-        qual = read_arr('qual')
+        qual = read_arr(source)
         # qual[:, :2] -= 1
         qual_ratings = []
         user = -1
@@ -146,7 +147,7 @@ class PMF:
         print(qual_ratings.shape)
 
         # save predictions
-        np.savetxt('../data/submissions/pmf-' + str(self.save_name) + '.dta', 
+        np.savetxt('../data/submissions/pmf-' + source + str(self.save_name) + '.dta', 
             qual_ratings, fmt='%.3f', newline='\n')
         print('finished!')
 
