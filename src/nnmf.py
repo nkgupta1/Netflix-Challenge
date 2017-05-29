@@ -8,11 +8,12 @@ from keras.layers.core import Dense, Dropout
 
 
 class NN:
-    def __init__(self, mode='train', K=50, epochs=100, save_epochs='all'):
+    def __init__(self, mode='predict', K=150, epochs=100, dropouts=(None, None),
+            save_epochs='all'):
         self.num_users = 458293
         self.data_mean = 3.60860891887339
         self.num_movies = 17770
-        self.K, self.epochs = K, epochs
+        self.K, self.epochs, self.dropouts = K, epochs, dropouts
         self.save_epochs = save_epochs
         # size of block to split the data into b/c of memory limitations
         self.block_size = 500
@@ -25,7 +26,7 @@ class NN:
             self.save_model()
         elif mode == 'predict':
             self.make_model()
-            self.model.load_weights('../models/nnmf-k50-e1-rmse1.047.h5')
+            self.load_model('../models/nnmf-k150-e100-rmse0.807')
             self.predict()
         elif mode == 'both':
             self.train()
@@ -33,6 +34,11 @@ class NN:
             self.predict()
         elif mode == 'bag':
             pass # not implemented yet
+
+
+    def load_model(self, name):
+        self.save_name = name
+        self.model.load_weights('../models/' + name + '.h5')
 
 
     def read_data(self):
@@ -67,7 +73,11 @@ class NN:
         self.rmse = real_RMSE(self.save_model, self.save_epochs)
         self.model = Sequential()
         self.model.add(Dense(self.K, input_shape=(self.num_users,), activation='linear'))  # hidden layer
+        if self.dropouts[0]:
+            self.model.add(Dropout(self.dropouts[0]))
         self.model.add(Dense(self.num_movies, activation='linear'))  # output layer
+        if self.dropouts[1]:
+            self.model.add(Dropout(self.dropouts[1]))
         self.model.summary()  # double-check model format
         # 'sgd' optimizer might not be a bad idea instead of adam:
         self.model.compile(loss=self.my_mse, optimizer=optimizers.adam())       
@@ -95,17 +105,21 @@ class NN:
         qual_ratings = []
         user = -1
         print('maximums', np.max(qual, axis=0))
-        userv = np.zeros((1, self.num_users), dtype=np.float32)
+        blocks = np.array_split(np.arange(0, self.num_users), 1000)
+        block = 0
+        block_start = -1
         for p, point in enumerate(qual):
-            if point[0] != user:
-                if (point[0] % 200 == 0):
-                    print('percent done:', (100 * p / len(qual)))
+            if point[0] > blocks[block][-1] or p == 0:
+                print('percent done:', (100 * p / len(qual)))
                 user = point[0]
-                user_vec = userv.copy()
-                user_vec[0, user] = 1
-                movie_vec = self.model.predict(user_vec)[0] + self.data_mean
-            qual_ratings.append(movie_vec[point[1]])
-        qual_ratings = np.array(qual_ratings, dtype=np.float32)
+                block_length = blocks[block].shape[0]
+                user_vecs = np.zeros((block_length, self.num_users), dtype=np.float32)
+                user_vecs[np.arange(0, block_length), blocks[block]] = 1
+                movie_vecs = self.model.predict(user_vecs)
+                block += 1
+                block_start = blocks[block][0]
+            qual_ratings.append(movie_vecs[point[0] - block_start, point[1]])
+        qual_ratings = np.array(qual_ratings, dtype=np.float32) + self.data_mean
         print(qual_ratings.shape)
 
         # save predictions
