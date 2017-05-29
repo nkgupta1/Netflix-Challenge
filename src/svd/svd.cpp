@@ -172,7 +172,7 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
     ////////////////////////////////////////////////////////////////////////////
 
     // scales eta by this every epoch
-    float adaptive_learning_rate = 0.9;
+    float adaptive_learning_rate = 1;
 
     float delta = 0.0;
     int ind;
@@ -194,7 +194,7 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
         num_grad_issues = 0;
 
         // takes 9 seconds
-        random_shuffle(&indices[0], &indices[NUM_TRAIN_PTS-1]);
+        // random_shuffle(&indices[0], &indices[NUM_TRAIN_PTS-1]);
 
         for (int ind_ind = 0; ind_ind < NUM_TRAIN_PTS; ind_ind++) {
             ind = indices[ind_ind];
@@ -246,13 +246,13 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
         if (E_out < min_E_out) {
             min_E_out = E_out;
             count_E_out_up = 0;
-            save_matrices(toRet, E_out, org_eta, reg, epoch);
+            // save_matrices(toRet, E_out, org_eta, reg, epoch);
         } else {
-            eta = adaptive_learning_rate * eta;
+            // eta = adaptive_learning_rate * eta;
             count_E_out_up++;
-            if (count_E_out_up > 4) {
-                break;
-            }
+            // if (count_E_out_up > 4) {
+            //     break;
+            // }
         }
 
         // check termination condition
@@ -451,13 +451,46 @@ void predict(svd_data *data, const string fbase) {
 }
 
 
+void predict_probe(svd_data *data, const string fbase) {
+    /*
+     * Given the matrices and their parameters, creates predictions and saves
+     * them using a standard format.
+     */
+    
+    printf("prediciting data...\n");
+    
+    // read in the test data
+    float **Y;
+    Y = read_data("../../data/um/probe_all.dta", NUM_TEST_PTS);
+
+    ofstream ofs(fbase + "_probe.txt");
+
+    // generate and output predictions
+    float pred = 0.;
+    for (int ind = 0; ind < NUM_TEST_PTS; ind++) {
+        pred = prediction(data, Y[ind][0] - 1, Y[ind][1] - 1);
+        if (pred < 1)
+            pred = 1;
+        if (pred > 5)
+            pred = 5;
+        ofs << pred << "\n";
+    }
+
+    // clean up
+    ofs.close();
+
+    printf("done predicting data...\n\n");
+
+}
+
+
 int main(int argc, char **argv) {
 
     // training parameters
     float eta = 0.01;
-    float reg = 0.075;
+    float reg = 0.03;
     float eps = 0.00001;
-    int max_epochs = 100;
+    int max_epochs = 150;
 
     printf("eta: %f\nreg: %f\neps: %f\nepochs: %d\nlatent factors: %d\n\n",
             eta, reg, eps, max_epochs, K);
@@ -487,12 +520,13 @@ int main(int argc, char **argv) {
     // save the matrices
     save_matrices(matrices, err, eta, reg, max_epochs);
 
-    string file_base = "predictions/" + to_string(err) + "_" + to_string(K) + "_" +
+    string file_base = "predictions/OVERFIT_" + to_string(err) + "_" + to_string(K) + "_" +
                        to_string(eta) + "_" + to_string(reg) + "_" +
                        to_string(max_epochs);
 
     // make predictions
     predict(matrices, file_base);
+    predict_probe(matrices, file_base);
 
 
     return 0;

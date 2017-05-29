@@ -303,7 +303,8 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
                         update = eta*(X_temp_updates[k] - reg*X[k][list_movies[prev_user-1][i]]);
 
                         X[k][list_movies[prev_user-1][i]] += update;
-                        X_sum[prev_user-1][k] += update;
+                        // X_sum[prev_user-1][k] += update;
+                        X_sum[user-1][k] = 0.;
                     }
 
                     // now that we have updated the cumulated updates for the
@@ -311,7 +312,13 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
                     // user
                     X_temp_updates[k] = 0.;
 
+                    // update the sum for the next user for use
+                    for (int i = 0; i < movie_counts[user-1]; i++) {
+                        X_sum[user-1][k] += X[k][list_movies[user-1][i]];
+                    }
                 }
+
+
             }
 
             // so compiler doesn't generate warnings
@@ -633,7 +640,7 @@ int main(int argc, char **argv) {
 
     // training parameters
     float eta = 0.007;
-    float reg = 0.015;
+    float reg = 0.1;
     float eps = 0.00001;
     int max_epochs = 100;
 
