@@ -1,9 +1,11 @@
+#!/usr/bin/env python
+
 import numpy as np
 from numpy import linalg as LA
 from cache import *
 
 class PMF:
-    def __init__(self, num_feat=30, epsilon=0.01, _lambda=0.1, momentum=0.8, 
+    def __init__(self, num_feat=60, epsilon=0.01, _lambda=0.1, momentum=0.8, 
             maxepoch=20, num_batches=10, batch_size=100000):
         self.num_feat = num_feat
         self.epsilon = epsilon
@@ -50,7 +52,7 @@ class PMF:
 
             # Batch update
             for batch in range(self.num_batches):
-                print "epoch %d batch %d/%d" % (self.epoch, batch+1, self.num_batches)
+                # print "epoch %d batch %d/%d" % (self.epoch, batch+1, self.num_batches)
 
                 batch_idx = np.mod(np.arange(self.batch_size * batch,
                                              self.batch_size * (batch+1)),
@@ -114,7 +116,7 @@ class PMF:
                 if batch == self.num_batches - 1:
                     print 'Training RMSE: %f, Test RMSE %f' % (self.err_train[-1], self.err_val[-1])
                     self.save_name = 'e%d-t%.3f-v%.3f' % (self.epoch, self.err_train[-1], self.err_val[-1])
-                    # self.submission()
+                    self.submission()
 
 
     def predict(self, invID): 

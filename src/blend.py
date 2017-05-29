@@ -90,7 +90,8 @@ if __name__ == '__main__':
             ('probe17-F=60-NR=98291669-NB=15-SD-TBS-Time', 'output17-F=60-NR=98291669-NB=15-SD-TBS-Time'),
             ('probe24-F=30-NR=98291669-NB=5-SD-TBS-Time', 'output24-F=30-NR=98291669-NB=5-SD-TBS-Time'),
             ('probe12-F=200-NR=98291669-NB=15-SD-TBS-Time', 'output12-F=200-NR=98291669-NB=15-SD-TBS-Time'),
-            ('0.919819_75_0.007000_0.050000_100_probe.txt', '0.919819_75_0.007000_0.050000_100_pred.txt')
+            ('0.919819_75_0.007000_0.050000_100_probe.txt', '0.919819_75_0.007000_0.050000_100_pred.txt'),
+            ('probe12-F=250-NR=98291669-NB=1-SD-TBS-Time', 'output12-F=250-NR=98291669-NB=1-SD-TBS-Time')
              ]
 
     probes = [p for (p, q) in files]
