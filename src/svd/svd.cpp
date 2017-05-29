@@ -249,19 +249,11 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
             count_E_out_up = 0;
             // save_matrices(toRet, E_out, org_eta, reg, epoch);
         } else {
-<<<<<<< HEAD
             // eta = adaptive_learning_rate * eta;
             count_E_out_up++;
             // if (count_E_out_up > 4) {
             //     break;
             // }
-=======
-            count_E_out_up++;
-            eta = adaptive_learning_rate * eta;
-            if (count_E_out_up > 4) {
-                break;
-            }
->>>>>>> 143de2c0f69234d01c2d0d335e2f40b296f1a0db
         }
 
         // check termination condition
@@ -499,7 +491,7 @@ int main(int argc, char **argv) {
     float eta = 0.01;
     float reg = 0.03;
     float eps = 0.00001;
-    int max_epochs = 150;
+    int max_epochs = 1;
 
     printf("eta: %f\nreg: %f\neps: %f\nepochs: %d\nlatent factors: %d\n\n",
             eta, reg, eps, max_epochs, K);
