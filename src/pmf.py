@@ -3,8 +3,8 @@ from numpy import linalg as LA
 from cache import *
 
 class PMF:
-    def __init__(self, num_feat=50, epsilon=10, _lambda=0.1, momentum=0.8, 
-            maxepoch=20, num_batches=10, batch_size=1000):
+    def __init__(self, num_feat=30, epsilon=10, _lambda=0.1, momentum=0.8, 
+            maxepoch=20, num_batches=10, batch_size=100000):
         self.num_feat = num_feat
         self.epsilon = epsilon
         self._lambda = _lambda
@@ -19,7 +19,7 @@ class PMF:
         self.err_train = []
         self.err_val = []
         
-    def fit(self, train_vec, val_vec):   
+    def fit(self, train_vec, val_vec): 
         # mean subtraction
         self.mean_inv = np.mean(train_vec[:,2])
         
@@ -42,7 +42,6 @@ class PMF:
         
         
         while self.epoch < self.maxepoch:
-            print 'epoch:', self.epoch
             self.epoch += 1
 
             # Shuffle training truples
@@ -51,7 +50,7 @@ class PMF:
 
             # Batch update
             for batch in range(self.num_batches):
-                # print "epoch %d batch %d" % (self.epoch, batch+1)
+                print "epoch %d batch %d/%d" % (self.epoch, batch+1, self.num_batches)
 
                 batch_idx = np.mod(np.arange(self.batch_size * batch,
                                              self.batch_size * (batch+1)),
@@ -149,7 +148,7 @@ class PMF:
 
 
     def read_data(self):
-        self.train = self.preprocess_data(read_arr('hidden'))
+        self.train = self.preprocess_data(read_arr('base'))
         self.test = self.preprocess_data(read_arr('probe'))
         self.num_batches = self.train.shape[0] / self.batch_size
         print('num batches:', self.num_batches)
