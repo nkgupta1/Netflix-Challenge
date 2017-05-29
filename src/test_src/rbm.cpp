@@ -2,12 +2,12 @@
 
 #define opt 1
 #define discretize 1
-#define NUM_FACT 100
+#define NUM_FACT 200
 #define ANNEAL 5
-#define WEIGHTCOST 0.001
-#define SFILE "rbm_100_overfit.mat"
-#define PFILE "rbm_100_overfit_qual.mat"
-#define VFILE "rbm_100_overfit_probe.mat"
+#define WEIGHTCOST 0.005
+#define SFILE "rbm_200_5_0005.mat"
+#define PFILE "rbm_200_5_0005_qual.mat"
+#define VFILE "rbm_200_5_0005_probe.mat"
 
 // Model parameters from following paper:
 // http://www.montefiore.ulg.ac.be/~glouppe/pdf/msc-thesis.pdf
