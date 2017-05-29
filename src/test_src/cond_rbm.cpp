@@ -1,4 +1,9 @@
-#include "new_rbm.hpp"
+#include "cond_rbm.hpp"
+
+// Model parameters from following paper:
+// http://www.montefiore.ulg.ac.be/~glouppe/pdf/msc-thesis.pdf
+
+#define bit(R,i,j) (*R)[((long long) i) * ((long long) M) + (long long) j]
 
 RBM::RBM(const string file, const string v_file, 
          const string q_file, int hidden) {
@@ -10,11 +15,12 @@ RBM::RBM(const string file, const string v_file,
     K = 5;
 
     mom = 0.9;//0.5;
-    weightcost = 0.001 * 10;
+    // weightcost = 0.001 * 10;
 
-    eps_w = 0.01;//0.001 * 10;
-    eps_vis = 0.01;//0.008 * 10;
-    eps_hid = 0.01;//0.002 * 10;
+    eps_w = 0.0015;//0.001 * 10;
+    eps_vis = 0.0012;//0.008 * 10;
+    eps_hid = 0.1;//0.002 * 10;
+    eps_imp = 0.001;
 
     data_file = file;
     valid_file = v_file;
@@ -59,6 +65,10 @@ RBM::RBM(const string file, const string v_file,
 
     // Hidden biases initialize to zero; already handled by calloc
 
+    // Implicit factors matrix D already 0 by calloc
+
+    // Binary matrix R already set by init_pointers
+
 }
 
 RBM::RBM(const string rbm_file) {
@@ -79,7 +89,7 @@ RBM::RBM(const string rbm_file) {
     ifs >> mom;
 
     // Load learning weights
-    ifs >> eps_w >> eps_vis >> eps_hid;;
+    ifs >> eps_w >> eps_vis >> eps_hid >> eps_imp;;
 
     // Initialize default pointers (weights, biases)
     init_pointers();
@@ -135,6 +145,16 @@ RBM::~RBM() {
     free(W[0]);
     free(W);
 
+    // Free implicit factors
+    free(D[0][0]);
+    free(D[0]);
+    free(D);
+
+    // Free binary has-rated matrix R
+    // free(R[0]);
+    // free(R);
+    delete R;
+
     // Qualification set
     free(qual_idxs);
     free(qual);
@@ -186,7 +206,7 @@ void RBM::save(const string file) {
     ofs << mom << " ";
 
     // Save learning weights
-    ofs << eps_w << " " << eps_vis << " " << eps_hid << " ";
+    ofs << eps_w << " " << eps_vis << " " << eps_hid << " " << eps_imp << " ";
 
     // Save weights
     for (i = 0; i < V; i++) {
@@ -279,6 +299,31 @@ void RBM::init_pointers() {
         hid_bias[j] = hid_bias[j-1] + 3;
     }
 
+    // Implicit Factors - Total bias, del bias, momentum weights
+    D = (float ***) calloc(V, sizeof(float **));     // Each movie
+    D[0] = (float **) calloc(V*F, sizeof(float *));  // Each rating
+    D[0][0] = (float *) calloc(V*F*3, sizeof(float));// Full, del, mom
+
+    // Initialize all pointers; it ain't pretty, but it works
+    for (i = 1; i < V; i++) {
+        D[i] = D[i-1] + F;
+        D[i][0] = D[i-1][0] + (F*3);
+    }
+    for (i = 0; i < V; i++) {
+        for (j = 1; j < F; j++) {
+            D[i][j] = D[i][j-1] + 3;
+        }
+    }
+
+    // // Binary matrix R - indexed by user, movie
+    // R = (bool **) calloc(U, sizeof(bool *));      // Each factor
+    // R[0] = (bool *) calloc(U*V, sizeof(bool));    // Full, del, mom
+
+    // // Initialize binary matrix r.
+    // for (i = 1; i < U; i++) {
+    //     R[i] = R[i-1] + V;
+    // }
+
     // Initialize dataset
     int N1 = line_count(data_file);
     data = (int *) calloc(4*N1, sizeof(int));
@@ -305,6 +350,38 @@ void RBM::init_pointers() {
     qual_idxs = (int *) calloc(U+1, sizeof(int));
     qual_idxs[U] = N3;
     read_data(qual_file, qual, qual_idxs, N3);
+
+
+    R = new bitset<(long long) U * (long long) M>;
+    // Initialize R - simply requires read-through over all data
+    init_r();
+}
+
+void RBM::init_r() {
+    int i, u, m, d, r;
+    // Inits binary matrix r
+    ifstream dfile(data_file);
+    ifstream vfile(valid_file);
+    ifstream qfile(qual_file);
+
+    int lcd = line_count(data_file);
+    int lcv = line_count(valid_file);
+    int lcq = line_count(qual_file);
+
+    for (i = 0; i < lcd; i++) {
+        dfile >> u >> m >> d >> r;
+        bit(R,u-1,m-1) = 1;
+    }
+
+    for (i = 0; i < lcv; i++) {
+        vfile >> u >> m >> d >> r;
+        bit(R,u-1,m-1) = 1;
+    }
+
+    for (i = 0; i < lcq; i++) {
+        qfile >> u >> m >> d >> r;
+        bit(R,u-1,m-1) = 1;
+    }
 }
 
 void RBM::read_data(const string file, int *dta, int *dta_ids, int lc) {
@@ -406,17 +483,16 @@ void RBM::init_temp() {
 
 }
 
-void RBM::train(int start, int stop, int steps, int *rand_array) {
+void RBM::train(int start, int stop, int steps) {
     // Trains on users start to stop with steps cd steps.
-    int i, j, k, l, d;
+    int i, j, k, l;
     int num_mov, mov;
-    float eps_w_, eps_vis_, eps_hid_;
+    float eps_w_, eps_vis_, eps_hid_, eps_imp_;
 
     // del_W/vis_bis/hid_bias should be 0 as of previous iteration
     // And movies
 
-    for (d = start; d <= stop; d++) {
-        i = rand_array[d-1];
+    for (i = start; i <= stop; i++) {
         // Number of movies we need to consider
         num_mov = data_idxs[i] - data_idxs[i-1];
 
@@ -428,14 +504,8 @@ void RBM::train(int start, int stop, int steps, int *rand_array) {
             input_t[k][data[4*j+3]] = 1;
         }
 
-        // for (j = 0; j < num_mov; j++) {
-        //     printf("%f,%f,%f,%f,%f,%f\n", 
-        //         input_t[j][0],input_t[j][1],input_t[j][2],
-        //         input_t[j][3],input_t[j][4],input_t[j][5]);
-        // }
-
         // Visible -> Hidden
-        forward(input_t, hidden_t, num_mov, 0);
+        forward(input_t, hidden_t, num_mov, 0, i);
 
         // Initialize the cd_array
         for (j = data_idxs[i-1]; j < data_idxs[i]; j++) {
@@ -446,28 +516,18 @@ void RBM::train(int start, int stop, int steps, int *rand_array) {
         }
 
         // CONTRASTIVE DIVERGENCE
-        forward(cd_input_t, cd_hidden_t, num_mov, 1);
+        forward(cd_input_t, cd_hidden_t, num_mov, 1, i); // i included for imp
         backward(cd_input_t, cd_hidden_t, num_mov, 0);
 
         // If steps > 1, repeat:
         for (j = 1; j < steps; j++) {
-            forward(cd_input_t, cd_hidden_t, num_mov, 1);
+            forward(cd_input_t, cd_hidden_t, num_mov, 1, i);
             backward(cd_input_t, cd_hidden_t, num_mov, 0);
         }
 
         // Obtain non-discretized predictions
-        forward(cd_input_t, cd_hidden_t, num_mov, 0);
+        forward(cd_input_t, cd_hidden_t, num_mov, 0, i);
         // backward(cd_input_t, cd_hidden_t, num_mov, 0);
-
-        // for (j = 0; j < num_mov; j++) {
-        //     printf("%f,%f,%f,%f,%f,%f\n",
-        //         cd_input_t[j][0],cd_input_t[j][1],cd_input_t[j][2],
-        //         cd_input_t[j][3],cd_input_t[j][4],cd_input_t[j][5]);
-        // }
-
-        // for (j = 0; j < F; j++) {
-        //     printf("%f\n", cd_hidden_t[j]);
-        // }
 
         // Update del_w
         for (l = 0; l < num_mov; l++) {
@@ -495,6 +555,13 @@ void RBM::train(int start, int stop, int steps, int *rand_array) {
         // Update del_hid_bias
         for (j = 0; j < F; j++) {
             hid_bias[j][1] += hidden_t[j] - cd_hidden_t[j];
+        }
+        // Update del_implicit factors
+        for (l = 0; l < num_mov; l++) {
+            mov = (int) input_t[l][0];
+            for (j = 0; j <= F; j++) {
+                D[mov-1][j][1] += (hidden_t[j] - cd_hidden_t[j]);// * bit(R,l-1,j);
+            }
         }
 
         // Zero out input_t, cd_input_t
@@ -525,16 +592,37 @@ void RBM::train(int start, int stop, int steps, int *rand_array) {
             for (k = 0; k < K; k++) {
                 // Update momentum
                 W[i][j][k][2] = mom*W[i][j][k][2] // Current momentum
-                              + eps_w_ * (W[i][j][k][1] // del_W
-                              - weightcost * W[i][j][k][0]);
+                              + eps_w_ * W[i][j][k][1]; // del_W
+                              // - weightcost * W[i][j][k][0]);
 
                 // Update actual weights
-                W[i][j][k][0] += W[i][j][k][2]; // Regularize v
-                // W[i][j][k][0] -= eps_w_ * weightcost * W[i][j][k][0];
+                W[i][j][k][0] += W[i][j][k][2];
 
                 // Reset del_W
                 W[i][j][k][1] = 0;
             }
+        }
+    }
+    // Update del_implicit_factors
+    for (i = 0; i < V; i++) {
+        // If we didn't the the movie in this subset, we can skip it
+        if (!movies[i]) {
+            continue;
+        }
+
+        eps_imp_ = eps_imp / movies[i];
+
+        // If we did, update
+        for (j = 0; j < F; j++) {
+            // Update momentum
+            D[i][j][2] = mom*D[i][j][2] // Current momentum
+                       + eps_imp_ * D[i][j][1]; // del_imp
+
+            // Update actual implicit factors
+            D[i][j][0] += D[i][j][2];
+
+            // Reset del_implicit
+            D[i][j][1] = 0;
         }
     }
     // Update visible bias
@@ -579,9 +667,9 @@ void RBM::train(int start, int stop, int steps, int *rand_array) {
     }
 }
 
-void RBM::forward(float **input, float *hidden, int num_mov, bool dis) {
+void RBM::forward(float **input, float *hidden, int num_mov, bool dis, int user) {
     int i, j, k, mov;
-    float sum, prob;
+    float sum, prob, imp_sum;
     // Calculate score for each hidden element
     for (j = 0; j < F; j++) {
         sum = 0;
@@ -592,11 +680,16 @@ void RBM::forward(float **input, float *hidden, int num_mov, bool dis) {
             }
         }
 
+        imp_sum = 0;
+        // for (i = 0; i < V; i++) {
+        //     imp_sum += bit(R,user-1,i)*D[i][j][0];
+        // }
+
         // Scale hidden_bias by number of movies
         // Really, this makes much more sense than what I was 
         // doing before... Turn off scaling for now, add back and see
         // Maybe divide by num_mov?
-        prob = sig(hid_bias[j][0] + sum);
+        prob = sig(hid_bias[j][0] + sum + imp_sum);
         if (dis) {
             // Discretize hidden layer
             if (prob > unit_rand(gen)) {
@@ -679,7 +772,7 @@ float RBM::validate(int start, int stop, int *dta, int *dta_ids) {
         // }
 
         // Run prediction (don't bother) -> Check again with 0 -> 1
-        forward(input_t, hidden_t, num_tot, 0);
+        forward(input_t, hidden_t, num_tot, 0, i);
         backward(input_t, hidden_t, num_tot, 0);
 
         // Get validation score
@@ -727,15 +820,82 @@ float RBM::validate(int start, int stop, int *dta, int *dta_ids) {
     return rmse;
 }
 
-int main() {
-    // Train on data elements randomly
-    srand(time(0));
-    int rand_array[U] = {0};
+void RBM::predict(const string outfile) {
+    // Trains on users start to stop with steps cd steps.
+    int i, j, k, l;
+    int num_known, num_pred, num_tot;
 
-    for (int i = 1; i <= U; i++) {
-        rand_array[i-1] = i;
+    ofstream ofs(outfile);
+
+    for (i = 1; i <= U; i++) {
+        // Number of movies we need to consider
+        num_known = data_idxs[i] - data_idxs[i-1];
+        num_pred = qual_idxs[i] - qual_idxs[i-1];
+        num_tot = num_known + num_pred;
+
+        // Initialize the array
+        for (j = data_idxs[i-1]; j < data_idxs[i]; j++) {
+            k = j - data_idxs[i-1];
+    
+            input_t[k][0] = data[4*j+1];
+            input_t[k][data[4*j+3]] = 1;
+        }
+        for (j = qual_idxs[i-1]; j < qual_idxs[i]; j++) {
+            k = (j - qual_idxs[i-1]) + num_known;
+
+            input_t[k][0] = qual[4*j+1];
+        }
+
+        // for (j = 0; j < num_mov; j++) {
+        //     printf("%f,%f,%f,%f,%f,%f\n", 
+        //         input_t[j][0],input_t[j][1],input_t[j][2],
+        //         input_t[j][3],input_t[j][4],input_t[j][5]);
+        // }
+
+        // Run prediction (don't bother) -> Check again with 0 -> 1
+        forward(input_t, hidden_t, num_tot, 0, i);
+        backward(input_t, hidden_t, num_tot, 0);
+
+        // Get validation score
+        for (j = qual_idxs[i-1]; j < qual_idxs[i]; j++) {
+            k = (j - qual_idxs[i-1]) + num_known;
+
+            // Calculate average rating and print to file.
+            float numerator = 0;
+            numerator += input_t[k][1] * 1;
+            numerator += input_t[k][2] * 2;
+            numerator += input_t[k][3] * 3;
+            numerator += input_t[k][4] * 4;
+            numerator += input_t[k][5] * 5;
+
+            float denominator = 0;
+            denominator += input_t[k][1];
+            denominator += input_t[k][2];
+            denominator += input_t[k][3];
+            denominator += input_t[k][4];
+            denominator += input_t[k][5];
+
+            float mean = numerator / denominator;
+
+            ofs << mean << "\n"; // Rating
+        }
+
+        // Zero out input_t, cd_input_t
+        for (l = 0; l < num_tot; l++) {
+            for (k = 0; k <= 5; k++) {
+                input_t[l][k] = 0;
+            }
+        }
+        // Zero out hidden_t, cd_hidden_t
+        for (j = 0; j < F; j++) {
+            hidden_t[j] = 0;
+        }
     }
 
+    return;
+}
+
+int main() {
     // To run: 
     // Straight Sala
     RBM rbm = RBM("../../data/um/base_all.dta", "../../data/um/probe_all.dta", 
@@ -748,50 +908,47 @@ int main() {
     int runcount = 0;
     // rbm.mom = 0.5;
 
-    // Probably want more regularization, bc momentum is rough
-    while ((rmse < prmse) || (runcount < 40)) {
+    while ((rmse < prmse) || (runcount < 15)) {
         // if (runcount == 5) {
         //     rbm.mom = 0.9;
         // }
-        random_shuffle(begin(rand_array), end(rand_array));
-
-        if ((prmse-rmse) < 0.0001) {
-            // Maybe also reset momentum?
-            tsteps += 1;
-            printf("Incrementing tsteps: now %d\n", tsteps);
-        }
+        // if ((prmse-rmse) < 0.0001) {
+        //     // Maybe also reset momentum?
+        //     tsteps += 1;
+        //     printf("Incrementing tsteps: now %d\n", tsteps);
+        // }
 
         // ...
-        for (int i = 0; i < 458294; i++) {
-            // rbm.train((i*1000)+1,(i+1)*1000, tsteps, rand_array);
-            rbm.train(i,i,tsteps,rand_array);
-            if ((i % 1000) == 1) {
+        for (int i = 0; i < 4580; i++) {
+            rbm.train((i*100)+1,(i+1)*100, tsteps);
+            // rbm.train(i,i,tsteps,rand_array);
+            if ((i % 10) == 1) {
                 printf(".");
                 fflush(stdout);
             }
-            if (((i+1) % 50000) == 0) {
+            if (((i+1) % 50) == 0) {
                 float ein_t = rbm.validate(448001,458000, rbm.data, rbm.data_idxs);
                 float rmse_t = rbm.validate(448001,458000, rbm.valid, rbm.valid_idxs);
                 printf("    E_in: %f    E_valid: %f\n", ein_t, rmse_t);
 
             }
         }
-        // rbm.train(458001,458293,tsteps,rand_array);
+        rbm.train(458001,458293,tsteps);
 
         runcount++;
-        if (runcount > 8) {
-            rbm.eps_w *= 0.92;
-            rbm.eps_vis *= 0.92;
-            rbm.eps_hid *= 0.92;
-        } else if (runcount > 6) {
-            rbm.eps_w *= 0.9;
-            rbm.eps_vis *= 0.9;
-            rbm.eps_hid *= 0.9;
-        } else if (runcount > 2) {
-            rbm.eps_w *= 0.78;
-            rbm.eps_vis *= 0.78;
-            rbm.eps_hid *= 0.78;
-        }
+        // if (runcount > 8) {
+        //     rbm.eps_w *= 0.92;
+        //     rbm.eps_vis *= 0.92;
+        //     rbm.eps_hid *= 0.92;
+        // } else if (runcount > 6) {
+        //     rbm.eps_w *= 0.9;
+        //     rbm.eps_vis *= 0.9;
+        //     rbm.eps_hid *= 0.9;
+        // } else if (runcount > 2) {
+        //     rbm.eps_w *= 0.78;
+        //     rbm.eps_vis *= 0.78;
+        //     rbm.eps_hid *= 0.78;
+        // }
 
         prmse = rmse;
         // rmse = rbm.validate(1,458293); Validating the whole set
@@ -801,6 +958,7 @@ int main() {
         printf("\nOverall E_in: %f    Overall RMSE: %f\n", ein, rmse);
         runcount++;
 
-        // rbm.save("rbm_straight_sala_actual.mat");
+        rbm.save("cond_rbm_simple.mat");
     }
+    rbm.predict("cond_rbm_simple_preds.mat");
 }

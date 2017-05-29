@@ -12,89 +12,125 @@
 
 #include <cmath>
 #include <unistd.h>
-#include <vector>
-// #include <eigen3/Eigen/Dense> Will use later, probably with sparse as well
+#include <assert.h>
+#include <algorithm>
+
+#include "util.hpp"
 
 #define U   458293      // Users
-// #define U   23          // Users
 #define M   17770       // Movies
-// #define N   102416306   // Data Points
-// #define N   4179        // Data Points in function testing set
 #define D   2243        // Number days
-// #define K  5           // Number ratings
 
 using namespace std;
 
-void run_rbm(const string file, const string v_file, int hidden, float learning_rate,
-    const string fname, const string outname, const string save_name,
-    int full_iters, int cd_steps);
-
 class RBM {
 public:
-    // Complete dataset
+    // File containing data
+    string data_file;
+    // Training data
     int *data;
-    // Indices for where each person's info starts on the dataset
+    // Training data indices
     int *data_idxs;
 
+    // File containing validation set
+    string valid_file;
+    // Validation data
     int *valid;
+    // Validation data indices
     int *valid_idxs;
+
+    // File containing qual data points
+    string qual_file;
+    // Qual data;
+    int *qual;
+    // Qual data indices
+    int *qual_idxs;
 
     // Number of movies
     int V;
-    // Number of hidden units
+    // Number of hidden features
     int F;
     // Number of possible ratings
     int K;
+    // Annealing factor
+    float anneal;
 
-    // Weights
-    float ***W;
-    float ***W_mom;
-    // Visible biases
-    float **vis_bias;
-    float **vis_bias_mom;
-    // Hidden biase
-    float *hid_bias;
-    float *hid_bias_mom;
-
-    // Learning rate
-    float eps;
-
-    // Initial momentum
-    float initial_mom;
-    // Final momentum
-    float final_mom;
-
-    // Data file
-    string data_file;
-    string valid_file;
+    // Current momentum
+    float mom;
+    // Weightcost - penalize large weights -> encourage sparsity
+    float weightcost;
+    // TODO - Sparsity target, consider more sophisticated weightcost
+    // TODO - see if momentum should be applied even without signal
 
     // Random uniform number generator
     ranlux24_base gen;
     uniform_real_distribution<float> unit_rand;
+    normal_distribution<float> normal;
 
-    RBM(const string file, const string v_file, int hidden, float learning_rate);
-    RBM(const string file);
+    // Weights, del_weights, momentum for weights
+    float ****W;
+    // Vis bias, del_vis_bias, momentum for visible biases
+    float ***vis_bias;
+    // Hidden bias, del_hid_bias, momentum for hidden bias
+    float **hid_bias;
+
+    // Temporary input container
+    float **input_t;
+    // Temporary hidden container
+    float *hidden_t;
+    // Temporary contrastive divergence input container
+    float **cd_input_t;
+    // Temporary contrastive divergence hidden container
+    float *cd_hidden_t;
+    // Temporary container; keeps track if we need to update a specific movie
+    int *movies;
+
+    // Learning rate for weights
+    float eps_w;
+    // Learning rate for visible biases
+    float eps_vis;
+    // Learning rate for hidden biases (this is a per-unit factor)
+    float eps_hid;
+
+    // CONSTRUCTORS
+
+    // Default constructor
+    RBM(const string file, const string v_file, 
+        const string q_file, int hidden);
+    // Copy constructor
+    RBM(const string rbm_file);
     ~RBM();
 
-    void init(const string file, const string v_file);
-    void deinit();
+    // SAVE - Load with copy constructor
     void save(const string fname);
 
-    // Reads in initial data - probably put this in util at some point
-    void read_data(const string file, int *dta, int *dta_ids);
+    // INITIALIZING FUNCTIONS
 
+    // Pointers
+    void init_pointers();
+    void read_data(const string file, int *dta, int *dta_ids, int lc);
+
+    // RNG
+    void init_random();
+
+    // Temporary files
+    void init_temp();
+
+    // TRAIN
+
+    // Overall function
     void train(int start, int stop, int steps);
-    void user_to_input(int u, float **input);
-
-    void predict(const string fname, const string outname, int start, int stop);
-    float validate();
-
-    float sig(float num);
-    int line_count(const string fname);
-
-    // For a given user, calculates hidden from visible
+    // Input -> Hidden
     void forward(float **input, float *hidden, int num_mov, bool dis);
+    // Hidden -> Input
     void backward(float **input, float *hidden, int num_mov, bool dis);
+
+    // VALIDATE
+    float validate(int start, int stop, int *dta, int *dta_ids);
+
+    // PREDICT
+    void predict(const string outfile);
+
 };
 
 #endif

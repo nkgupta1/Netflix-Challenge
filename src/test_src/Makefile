@@ -8,34 +8,16 @@ all: clean preprocess rbm
 preprocess: $(OBJS) preprocess.o
 	$(CC) -o $@ $^
 
-rbm: rbm.o
+rbm: $(OBJS) rbm.o
 	$(CC) -o $@ $^
 
-tst: tst.o
+cond_rbm: $(OBJS) cond_rbm.o
 	$(CC) -o $@ $^
-
-new_rbm: $(OBJS) new_rbm.o
-	$(CC) -o $@ $^
-	
-# $(PLAYERNAME): $(OBJS) wrapper.o
-# 	$(CC) -o $@ $^
-
-# testgame: testgame.o
-# 	$(CC) -o $@ $^
-
-# testminimax: $(OBJS) testminimax.o
-# 	$(CC) -o $@ $^
 
 %.o: %.cpp
 	$(CC) -c $(CFLAGS) -x c++ $< -o $@
-	
-# java:
-# 	make -C java/
-
-# cleanjava:
-# 	make -C java/ clean
 
 clean:
-	rm -f *.o util preprocess rbm tst
+	rm -f *.o util preprocess rbm cond_rbm
 
 .PHONY: all clean
