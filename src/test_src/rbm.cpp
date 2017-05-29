@@ -5,9 +5,9 @@
 #define NUM_FACT 100
 #define ANNEAL 5
 #define WEIGHTCOST 0.001
-#define SFILE "rbm_100_5_0001.mat"
-#define PFILE "rbm_100_5_0001_preds.mat"
-#define VFILE "rbm_100_5_0001_probe.mat"
+#define SFILE "rbm_100_overfit.mat"
+#define PFILE "rbm_100_overfit_qual.mat"
+#define VFILE "rbm_100_overfit_probe.mat"
 
 // Model parameters from following paper:
 // http://www.montefiore.ulg.ac.be/~glouppe/pdf/msc-thesis.pdf
@@ -895,8 +895,8 @@ int main() {
 
         if (rmse < best) {
             best = rmse;
-            failcount = 0;
             rbm.save(SFILE);
+            failcount = 0;
         } else {
             failcount++;
         }

@@ -14,10 +14,10 @@ from keras.utils.np_utils import to_categorical
 
 
 class NN:
-    def __init__(self, mode='bag', folder='svd3', biases=True, epochs=2, 
-        layers=(300, 1200, 300), dropouts=(0.2, 0.2, 0.2), valid_per=0, 
+    def __init__(self, mode='both', folder='svd3', biases=True, epochs=10, 
+        layers=(128, 512, 256), dropouts=(0.2, 0.2, 0.2), valid_per=1, 
         save_epochs=[], w_reg=0.0005, b_reg=0.0005, ratings_vector=False, 
-        bag_dir='blend2', bags=128):
+        bag_dir='blend3', bags=128):
         '''
         Uses the svd latent factors in the folder data/arg:folder to train a 
         neural network along with indices and ratings in base (uses biases if 
@@ -48,7 +48,7 @@ class NN:
         # number of blocks to split the data into b/c of memory limitations:
         # provides much better performance than swapping >20gb in/out while 
         # training. the optimal number is dependent on individual hardware
-        self.num_blocks = 1000
+        self.num_blocks = 500
         
         # name of dataset to use for validation data
         self.valid_data = 'probe'
@@ -273,19 +273,20 @@ class NN:
         # hidden layers 2, 3
         for l in [1, 2]: 
             if self.layers[l]:
-                self.model.add(Dense(self.layers[l], activation='relu', 
+                self.model.add(Dense(self.layers[l], activation='sigmoid', 
                 W_regularizer=regularizers.l2(self.w_reg),
                 b_regularizer=regularizers.l1(self.b_reg)))
                 if self.dropouts[l]:
                     self.model.add(Dropout(self.dropouts[l]))
         # output layer
+        opt = optimizers.adadelta() # optimizers.adam() # lr=0.001
         if self.ratings_vector:
-            self.model.add(Dense(5, activation='relu'))
-            self.model.compile(loss='categorical_crossentropy', optimizer=optimizers.adam())
+            self.model.add(Dense(5, activation='sigmoid'))
+            self.model.compile(loss='categorical_crossentropy', optimizer=opt)
         else:
-            self.model.add(Dense(1, activation='relu'))
+            self.model.add(Dense(1, activation='linear'))
             # 'sgd' optimizer might not be a bad idea instead of adam:
-            self.model.compile(loss='mse', optimizer=optimizers.adam()) #lr=0.001     
+            self.model.compile(loss='mse', optimizer=opt)
         self.model.summary()  # double-check model format
         
 

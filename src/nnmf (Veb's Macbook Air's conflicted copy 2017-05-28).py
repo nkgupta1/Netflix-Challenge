@@ -8,7 +8,7 @@ from keras.layers.core import Dense
 
 
 class NN:
-    def __init__(self, mode='train', K=50, epochs=100, save_epochs='all'):
+    def __init__(self, mode='predict', K=50, epochs=100, save_epochs='all'):
         self.num_users = 458293
         self.data_mean = 3.60860891887339
         self.num_movies = 17770
@@ -147,3 +147,16 @@ if __name__ == '__main__':
     NN()
 
 
+
+'''
+Notes: 
+Submitting all of the mean is   RMSE: 1.12882 (-18.65% above water)
+Submitting k=5 epochs=1 is      RMSE: 1.12577 (-18.33% above water)
+Submitting k=20 epochs=5 is     RMSE: 1.05539 (-10.93% above water) [predicted 0.94 training]
+Submitting k=50 epochs=50 is    RMSE: 0.98403 (-3.43% above water) [predicted 0.80 training]
+Submitting k=100 epochs=50 is   RMSE: 0.99372 (-4.45% above water) [predicted 0.75 training]
+Submitting k=100 epochs=20 is   RMSE: 0.9936 (-4.44% above water) [predicted 0.80 training]
+Submitting k=50 epochs=20 is    RMSE: 0.99717 (-4.81% above water) [predicted 0.84 training]
+Submitting k=200 epochs=50 is   RMSE: 1.01436 (-6.62% above water) [predicted 0.67 training]
+Submitting k=20 epochs=20 is    RMSE: 1.00924 (-6.08% above water) [predicted 0.88 training]
+'''

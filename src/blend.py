@@ -13,9 +13,10 @@ def read_files(directory, files):
     return np.array(A, dtype=np.float32)
 
 
-def probe_blend(probe_files, qual_files=None, save_name='p_blend', directory='../data/blend0/'):
+def probe_blend(probe_files, qual_files=None, save_name='p_blend', directory='blend0'):
     # note that qual files and probe files must be in the same order!
     print('Blending on probe...')
+    directory = '../data/submissions/' + directory + '/'
     A = read_files(directory, probe_files).T
     s = read_arr('probe')[:, 3].astype(np.float32)
 
@@ -39,15 +40,17 @@ def probe_blend(probe_files, qual_files=None, save_name='p_blend', directory='..
     print('Finished! saved submission.')
 
 
-def mean_blend(sub_files, save_name='mean_blend', directory='../data/blend0/'):
+def mean_blend(sub_files, save_name='mean_blend', directory='blend0'):
+    directory = '../data/submissions/' + directory + '/'
     submission = np.mean(read_files(directory, sub_files), axis=0)
     np.savetxt(directory + save_name + '.dta', submission, fmt='%.3f', newline='\n')
     print('Finished! saved submission.')
 
 
-def qual_blend(qual_files, save_name='q_blend', directory='../data/blend0/'):
+def qual_blend(qual_files, save_name='q_blend', directory='blend0'):
     # note that qual files and probe files must be in the same order!
     print('Blending on qual...')
+    directory = '../data/submissions/' + directory + '/'
     A = read_files(directory, qual_files)
     s = read_arr('qual')[:, 3].astype(np.float32)
 
@@ -69,8 +72,6 @@ def qual_blend(qual_files, save_name='q_blend', directory='../data/blend0/'):
 
 
 if __name__ == '__main__':
-    pass
-
     files = [
             # global
             ('average_probe', 'average_qual'),
