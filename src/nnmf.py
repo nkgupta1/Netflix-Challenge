@@ -26,7 +26,7 @@ class NN:
             self.save_model()
         elif mode == 'predict':
             self.make_model()
-            self.load_model('../models/nnmf-k150-e100-rmse0.807')
+            self.load_model('nnmf-k150-e100-rmse0.807')
             self.predict()
         elif mode == 'both':
             self.train()
@@ -105,18 +105,18 @@ class NN:
         qual_ratings = []
         user = -1
         print('maximums', np.max(qual, axis=0))
-        blocks = np.array_split(np.arange(0, self.num_users), 1000)
-        block = 0
+        blocks = np.array_split(np.arange(0, self.num_users), 100)
+        block = -1
         block_start = -1
         for p, point in enumerate(qual):
-            if point[0] > blocks[block][-1] or p == 0:
+            if p == 0 or point[0] > blocks[block][-1]:
+                block += 1
                 print('percent done:', (100 * p / len(qual)))
                 user = point[0]
                 block_length = blocks[block].shape[0]
                 user_vecs = np.zeros((block_length, self.num_users), dtype=np.float32)
                 user_vecs[np.arange(0, block_length), blocks[block]] = 1
                 movie_vecs = self.model.predict(user_vecs)
-                block += 1
                 block_start = blocks[block][0]
             qual_ratings.append(movie_vecs[point[0] - block_start, point[1]])
         qual_ratings = np.array(qual_ratings, dtype=np.float32) + self.data_mean
