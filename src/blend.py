@@ -79,19 +79,23 @@ if __name__ == '__main__':
             ('probe-KNN-', 'qual-KNN-'),
             ('final_unprocessed_probe_pred_50.dta', 'final_unprocessed_qual_pred_50.dta'),
             # SVDs
-            ('OVERFIT_0.949640_50_0.010000_0.030000_150_probe.txt', 'OVERFIT_0.949640_50_0.010000_0.030000_150_qual.txt'),
+            # overfit
+            ('OVERFIT_0.949640_50_0.010000_0.030000_150_probe.txt',  'OVERFIT_0.949640_50_0.010000_0.030000_150_qual.txt'),
             ('OVERFIT_0.949723_100_0.010000_0.030000_100_probe.txt', 'OVERFIT_0.949723_100_0.010000_0.030000_100_qual.txt'),
+            # biases
             ('BEST_NAIVE_SVD_0.917174_50_0.010000_0.030000_100_probe.txt', 'BEST_NAIVE_SVD_0.917174_50_0.010000_0.030000_100_qual.txt'),
-            ('probe24-F=10-NR=98291669-NB=5-SD-TBS-Time', 'output24-F=10-NR=98291669-NB=5-SD-TBS-Time'),
-            ('probe10-F=30-NR=98291669-NB=5-SD-TBS-Time', 'output10-F=30-NR=98291669-NB=5-SD-TBS-Time'),
-            ('probe22-F=50-NR=98291669-NB=30-SD', 'output22-F=50-NR=98291669-NB=30-SD'),
-            ('probe18-F=60-NR=98291669-NB=5-SD-TBS-Time', 'output18-F=60-NR=98291669-NB=5-SD-TBS-Time'),
-            ('probe14-F=250-NR=98291669-NB=5-SD-TBS-Time', 'output14-F=250-NR=98291669-NB=5-SD-TBS-Time'),
-            ('probe17-F=60-NR=98291669-NB=15-SD-TBS-Time', 'output17-F=60-NR=98291669-NB=15-SD-TBS-Time'),
-            ('probe24-F=30-NR=98291669-NB=5-SD-TBS-Time', 'output24-F=30-NR=98291669-NB=5-SD-TBS-Time'),
+            ('0.919819_75_0.007000_0.050000_100_probe.txt',                               '0.919819_75_0.007000_0.050000_100_pred.txt'),
+            # something....
+            ('probe22-F=50-NR=98291669-NB=30-SD',           'output22-F=50-NR=98291669-NB=30-SD'),
+            # timesvd++
+            ('probe24-F=10-NR=98291669-NB=5-SD-TBS-Time',   'output24-F=10-NR=98291669-NB=5-SD-TBS-Time'),
+            ('probe10-F=30-NR=98291669-NB=5-SD-TBS-Time',   'output10-F=30-NR=98291669-NB=5-SD-TBS-Time'),
+            ('probe18-F=60-NR=98291669-NB=5-SD-TBS-Time',   'output18-F=60-NR=98291669-NB=5-SD-TBS-Time'),
+            ('probe14-F=250-NR=98291669-NB=5-SD-TBS-Time',  'output14-F=250-NR=98291669-NB=5-SD-TBS-Time'),
+            ('probe17-F=60-NR=98291669-NB=15-SD-TBS-Time',  'output17-F=60-NR=98291669-NB=15-SD-TBS-Time'),
+            ('probe24-F=30-NR=98291669-NB=5-SD-TBS-Time',   'output24-F=30-NR=98291669-NB=5-SD-TBS-Time'),
             ('probe12-F=200-NR=98291669-NB=15-SD-TBS-Time', 'output12-F=200-NR=98291669-NB=15-SD-TBS-Time'),
-            ('0.919819_75_0.007000_0.050000_100_probe.txt', '0.919819_75_0.007000_0.050000_100_pred.txt'),
-            ('probe12-F=250-NR=98291669-NB=1-SD-TBS-Time', 'output12-F=250-NR=98291669-NB=1-SD-TBS-Time')
+            ('probe12-F=250-NR=98291669-NB=1-SD-TBS-Time',  'output12-F=250-NR=98291669-NB=1-SD-TBS-Time')
              ]
 
     probes = [p for (p, q) in files]
