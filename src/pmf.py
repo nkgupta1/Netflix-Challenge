@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import numpy as np
 from numpy import linalg as LA
 from cache import *
@@ -21,24 +23,24 @@ class PMF:
         
     def fit(self, train_vec, val_vec): 
         # mean subtraction
-        self.mean_inv = np.mean(train_vec[:,2])
-        
-        pairs_tr = train_vec.shape[0]
-        pairs_va = val_vec.shape[0]
+        self.mean_inv = np.mean(train_vec[:,2]) # 3.608...
+
+        pairs_tr = train_vec.shape[0] # Training points
+        pairs_va = val_vec.shape[0]   # Validation points
         
         # 1-p-i, 2-m-c
+
+        # 458293 + 1
         num_inv = int(max(np.amax(train_vec[:,0]), np.amax(val_vec[:,0]))) + 1
+        # 17770 + 1
         num_com = int(max(np.amax(train_vec[:,1]), np.amax(val_vec[:,1]))) + 1
 
-        incremental = False
-        if ((not incremental) or (self.w_C is None)):
-            # initialize
-            self.epoch = 0
-            self.w_C = 0.1 * np.random.randn(num_com, self.num_feat)
-            self.w_I = 0.1 * np.random.randn(num_inv, self.num_feat)
-            
-            self.w_C_inc = np.zeros((num_com, self.num_feat))
-            self.w_I_inc = np.zeros((num_inv, self.num_feat))
+        # initialize
+        self.epoch = 0
+        self.w_C = 0.1 * np.random.randn(num_com, self.num_feat)
+        self.w_I = 0.1 * np.random.randn(num_inv, self.num_feat)            
+        self.w_C_inc = np.zeros((num_com, self.num_feat))
+        self.w_I_inc = np.zeros((num_inv, self.num_feat))
         
         
         while self.epoch < self.maxepoch:
