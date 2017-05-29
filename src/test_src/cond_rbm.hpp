@@ -14,12 +14,12 @@
 #include <unistd.h>
 #include <assert.h>
 #include <algorithm>
+#include <bitset>
 
 #include "util.hpp"
 
 #define U   458293      // Users
 #define M   17770       // Movies
-#define D   2243        // Number days
 
 using namespace std;
 
@@ -71,6 +71,11 @@ public:
     float ***vis_bias;
     // Hidden bias, del_hid_bias, momentum for hidden bias
     float **hid_bias;
+    // Implicit weights, del_weights, momentum for implicit factors
+    float ***D;
+    // Movie-rated matrix
+    bitset<(long long) U * (long long) M> *R;
+
 
     // Temporary input container
     float **input_t;
@@ -89,6 +94,8 @@ public:
     float eps_vis;
     // Learning rate for hidden biases (this is a per-unit factor)
     float eps_hid;
+    // Learning rate for implicit factors biases
+    float eps_imp;
 
     // CONSTRUCTORS
 
@@ -107,6 +114,7 @@ public:
     // Pointers
     void init_pointers();
     void read_data(const string file, int *dta, int *dta_ids, int lc);
+    void init_r();
 
     // RNG
     void init_random();
@@ -117,14 +125,17 @@ public:
     // TRAIN
 
     // Overall function
-    void train(int start, int stop, int steps, int *rand_array);
+    void train(int start, int stop, int steps);
     // Input -> Hidden
-    void forward(float **input, float *hidden, int num_mov, bool dis);
+    void forward(float **input, float *hidden, int num_mov, bool dis, int user);
     // Hidden -> Input
     void backward(float **input, float *hidden, int num_mov, bool dis);
 
     // VALIDATE
     float validate(int start, int stop, int *dta, int *dta_ids);
+
+    // PREDICT
+    void predict(const string outfile);
 
 };
 

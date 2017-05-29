@@ -63,6 +63,41 @@ void Processing::split(const string data, const string ids) {
     } 
 }
 
+void Processing::split_mu(const string data, const string ids) {
+    // User, month, date, rating, id
+    int u, m, d, r, id;
+
+    // Directory and file names - used for saving new .dta files
+    string dir = directory_from_path(data);
+    string file = file_from_path(data);
+
+    // Input files
+    ifstream datafile(data);
+    ifstream idsfile(ids);
+
+    // Output files
+    ofstream base(dir + "/base_mu_;" + file);
+    // ofstream valid(dir + "/valid_" + file);
+    // ofstream hidden(dir + "/hidden_" + file);
+    ofstream probe(dir + "/probe_mu_" + file);
+    ofstream qual(dir + "/qual_mu_" + file);
+
+    while (datafile >> u >> m >> d >> r) {
+        idsfile >> id;
+        if        (id == 1) {
+            base << u << " " << m << " " << d << " " << r << "\n";
+        } else if (id == 2) {
+            base << u << " " << m << " " << d << " " << r << "\n";
+        } else if (id == 3) {
+            base << u << " " << m << " " << d << " " << r << "\n";
+        } else if (id == 4) {
+            probe << u << " " << m << " " << d << " " << r << "\n";
+        } else if (id == 5) {
+            qual << u << " " << m << " " << d << " " << r << "\n";
+        }
+    } 
+}
+
 /*
  * Generate and save pre-processing object. Will write more helpful
  * comment later.
@@ -310,7 +345,8 @@ void Processing::user_average() {
  * Generates about 6 gigabytes of files. 
  */
 int main() {
-    Processing::split("../../data/um/all.dta", "../../data/um/all.idx");
+    // Processing::split("../../data/um/all.dta", "../../data/um/all.idx");
+    Processing::split("../../data/mu/all.dta", "../../data/mu/all.idx");
     printf("Dataset split\n");
 
     // float ave = find_average("hashe_data/um/base_test.dta");

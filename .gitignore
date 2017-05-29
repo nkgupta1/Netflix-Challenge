@@ -15,8 +15,10 @@
 *.o
 submissions/
 predictions/
+predictions_pp/
 data/
 models/
+models_pp/
 .DS_Store
 
 # Byte-compiled / optimized / DLL files

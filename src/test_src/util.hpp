@@ -13,7 +13,7 @@
 
 #define U   458293      // Users
 #define M   17770       // Movies
-#define D   2243        // Number days
+// #define D   2243        // Number days
 
 using namespace std;
 

@@ -52,6 +52,7 @@ public:
     // Split data; takes in data file and index file.
     // Splits into 5 new files (base, valid, hidden, probe, qual)
     static void split(const string data, const string ids);
+    static void split_mu(const string data, const string ids);
 
     // Sets parameters according to data in given file, saves to outname.
     void initialize(const string data, const string outname);
