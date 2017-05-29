@@ -334,3 +334,13 @@ SVD_Name=svd3, K=50, Epochs=3, Layers=(20, 70, 50), Dropouts=(None, None, None),
 Model Saved: ../models/c-nnsvd-k50-e3-layers(20, 70, 50)-dropouts(None, None, None)-regs0.0005,0.0005-rmse0.898.h5
 RMSE training losses: [0.93425267672345913, 0.91008586900180577, 0.89823051856079594]
 RMSE validation losses: []
+
+SVD_Name=svd3, K=50, Epochs=2, Layers=(128, 512, 256), Dropouts=(0.2, 0.2, 0.2), Validation=probe, Regularization (weights, bias)=(0.0005, 0.0005), Hot=False
+Model Saved: ../models/c-nnsvd-k50-e2-layers(128, 512, 256)-dropouts(0.2, 0.2, 0.2)-regs0.0005,0.0005-rmse0.928.h5
+RMSE training losses: [0.99946430897973138, 0.92815279283686924]
+RMSE validation losses: [0.94843185, 0.95652467]
+
+SVD_Name=svd3, K=50, Epochs=2, Layers=(128, 512, 256), Dropouts=(0.2, 0.2, 0.2), Validation=probe, Regularization (weights, bias)=(0.0005, 0.0005), Hot=False
+Model Saved: ../models/c-nnsvd-k50-e2-layers(128, 512, 256)-dropouts(0.2, 0.2, 0.2)-regs0.0005,0.0005-rmse0.927.h5
+RMSE training losses: [0.99908530360234393, 0.92779395050166547]
+RMSE validation losses: [0.95308489, 0.95692128]
