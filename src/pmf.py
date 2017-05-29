@@ -107,7 +107,7 @@ class PMF:
                     pred_out = np.sum(np.multiply(self.w_I[np.array(val_vec[inds,0], dtype='int32'),:],
                                                     self.w_C[np.array(val_vec[inds,1], dtype='int32'),:]),
                                         axis=1) # mean_inv subtracted
-                    rawErr = pred_out - val_vec[:, 2] + self.mean_inv
+                    rawErr = pred_out - val_vec[inds, 2] + self.mean_inv
                     self.err_val.append(LA.norm(rawErr)/np.sqrt(pairs_va))
 
                 # Print info

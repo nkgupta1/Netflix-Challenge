@@ -4,7 +4,7 @@ from cache import *
 import keras
 from keras.models import Sequential, load_model
 from keras import optimizers
-from keras.layers.core import Dense
+from keras.layers.core import Dense, Dropout
 
 
 class NN:
@@ -51,7 +51,10 @@ class NN:
         # generator to get training data for model
         users = np.zeros((self.block_size, self.num_users), dtype=np.float32)
         while True:
-            for u in range(0, self.num_users, self.block_size):
+            blocks = np.arange(0, self.num_users, self.block_size)
+            np.random.shuffle(blocks)
+            blocks = blocks.tolist()
+            for u in blocks:
                 if u + self.block_size >= self.num_users:
                     break
                 user_vecs = users.copy()
