@@ -172,7 +172,7 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
     ////////////////////////////////////////////////////////////////////////////
 
     // scales eta by this every epoch
-    float adaptive_learning_rate = 1;
+    float adaptive_learning_rate = .9;
 
     float delta = 0.0;
     int ind;
@@ -249,11 +249,11 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
             count_E_out_up = 0;
             // save_matrices(toRet, E_out, org_eta, reg, epoch);
         } else {
-            // eta = adaptive_learning_rate * eta;
+            eta = adaptive_learning_rate * eta;
             count_E_out_up++;
-            // if (count_E_out_up > 4) {
-            //     break;
-            // }
+            if (count_E_out_up > 4) {
+                break;
+            }
         }
 
         // check termination condition
@@ -488,10 +488,10 @@ void predict_probe(svd_data *data, const string fbase) {
 int main(int argc, char **argv) {
 
     // training parameters
-    float eta = 0.01;
-    float reg = 0.03;
+    float eta = 0.007;
+    float reg = 0.05;
     float eps = 0.00001;
-    int max_epochs = 1;
+    int max_epochs = 100;
 
     printf("eta: %f\nreg: %f\neps: %f\nepochs: %d\nlatent factors: %d\n\n",
             eta, reg, eps, max_epochs, K);
@@ -512,7 +512,7 @@ int main(int argc, char **argv) {
     matrices = train_model(eta, reg, Y_train, Y_test, eps, max_epochs);
 
     // load matrices
-    // matrices = load_matrices("models/0.928542_50_0.007000_0.050000_26");
+    // matrices = load_matrices("models/0.917174_50_0.007000_0.050000_71");
 
     // get the out-sample error
     float err = get_err(matrices, Y_test, NUM_TEST_PTS, 0);
@@ -521,7 +521,7 @@ int main(int argc, char **argv) {
     // save the matrices
     save_matrices(matrices, err, eta, reg, max_epochs);
 
-    string file_base = "predictions/OVERFIT_" + to_string(err) + "_" + to_string(K) + "_" +
+    string file_base = "predictions/" + to_string(err) + "_" + to_string(K) + "_" +
                        to_string(eta) + "_" + to_string(reg) + "_" +
                        to_string(max_epochs);
 

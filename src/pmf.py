@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import numpy as np
 from numpy import linalg as LA
 from cache import *
@@ -21,25 +23,23 @@ class PMF:
         
     def fit(self, train_vec, val_vec): 
         # mean subtraction
-        self.mean_inv = np.mean(train_vec[:,2])
-        
-        pairs_tr = train_vec.shape[0]
-        pairs_va = val_vec.shape[0]
+        self.mean_inv = np.mean(train_vec[:,2]) # 3.608...
+
+        pairs_tr = train_vec.shape[0] # ~94000000
+        pairs_va = val_vec.shape[0]   # ~ 1900000
         
         # 1-p-i, 2-m-c
+        # 458293 + 1
         num_inv = int(max(np.amax(train_vec[:,0]), np.amax(val_vec[:,0]))) + 1
+        # 17770 + 1
         num_com = int(max(np.amax(train_vec[:,1]), np.amax(val_vec[:,1]))) + 1
 
-        incremental = False
-        if ((not incremental) or (self.w_C is None)):
-            # initialize
-            self.epoch = 0
-            self.w_C = 0.1 * np.random.randn(num_com, self.num_feat)
-            self.w_I = 0.1 * np.random.randn(num_inv, self.num_feat)
-            
-            self.w_C_inc = np.zeros((num_com, self.num_feat))
-            self.w_I_inc = np.zeros((num_inv, self.num_feat))
-        
+        # initialize
+        self.epoch = 0
+        self.w_C = 0.1 * np.random.randn(num_com, self.num_feat)
+        self.w_I = 0.1 * np.random.randn(num_inv, self.num_feat)            
+        self.w_C_inc = np.zeros((num_com, self.num_feat))
+        self.w_I_inc = np.zeros((num_inv, self.num_feat))
         
         while self.epoch < self.maxepoch:
             self.epoch += 1
@@ -91,11 +91,10 @@ class PMF:
 
                 # Compute Objective Function after
                 if batch == self.num_batches - 1:
-                    inds = (np.random.rand(10000) * train_vec.shape[0]).astype(np.uint32)
-                    pred_out = np.sum(np.multiply(self.w_I[np.array(train_vec[inds,0], dtype='int32'),:],
-                                                    self.w_C[np.array(train_vec[inds,1], dtype='int32'),:]),
+                    pred_out = np.sum(np.multiply(self.w_I[np.array(train_vec[:,0], dtype='int32'),:],
+                                                    self.w_C[np.array(train_vec[:,1], dtype='int32'),:]),
                                         axis=1) # mean_inv subtracted
-                    rawErr = pred_out - train_vec[inds, 2] + self.mean_inv
+                    rawErr = pred_out - train_vec[:, 2] + self.mean_inv
                     obj = LA.norm(rawErr) ** 2 \
                             + 0.5*self._lambda*(LA.norm(self.w_I) ** 2 + LA.norm(self.w_C) ** 2)
 
@@ -103,9 +102,8 @@ class PMF:
 
                 # Compute validation error
                 if batch == self.num_batches - 1:
-                    inds = (np.random.rand(10000) * val_vec.shape[0]).astype(np.uint32)
-                    pred_out = np.sum(np.multiply(self.w_I[np.array(val_vec[inds,0], dtype='int32'),:],
-                                                    self.w_C[np.array(val_vec[inds,1], dtype='int32'),:]),
+                    pred_out = np.sum(np.multiply(self.w_I[np.array(val_vec[:,0], dtype='int32'),:],
+                                                    self.w_C[np.array(val_vec[:,1], dtype='int32'),:]),
                                         axis=1) # mean_inv subtracted
                     rawErr = pred_out - val_vec[inds, 2] + self.mean_inv
                     self.err_val.append(LA.norm(rawErr)/np.sqrt(pairs_va))
@@ -139,7 +137,7 @@ class PMF:
         for p, point in enumerate(qual):
             if point[0] != user:
                 user = point[0]
-                movie_vec = self.predict(user) + 3.60860891887339
+                movie_vec = self.predict(user)
             qual_ratings.append(movie_vec[point[1]])
         qual_ratings = np.array(qual_ratings, dtype=np.float32)
         print(qual_ratings.shape)
@@ -150,7 +148,7 @@ class PMF:
 
 
     def read_data(self):
-        self.train = self.preprocess_data(read_arr('base'))
+        self.train = self.preprocess_data(read_arr('hidden'))
         self.test = self.preprocess_data(read_arr('probe'))
         self.num_batches = self.train.shape[0] / self.batch_size
         print('num batches:', self.num_batches)
@@ -158,7 +156,6 @@ class PMF:
 
     def preprocess_data(self, arr):
         arr = np.delete(arr, 2, 1).astype(np.float32) 
-        arr[:, 2] -= 3.60860891887339
         return arr
 
 
