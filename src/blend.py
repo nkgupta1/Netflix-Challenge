@@ -16,7 +16,7 @@ def read_files(directory, files):
 def probe_blend(probe_files, qual_files=None, save_name='p_blend', directory='blend0'):
     # note that qual files and probe files must be in the same order!
     print('Blending on probe...')
-    directory = '../data/submissions/' + directory + '/'
+    # directory = '../data/submissions/' + directory + '/'
     A = read_files(directory, probe_files).T
     s = read_arr('probe')[:, 3].astype(np.float32)
 
@@ -89,7 +89,8 @@ if __name__ == '__main__':
             ('probe14-F=250-NR=98291669-NB=5-SD-TBS-Time', 'output14-F=250-NR=98291669-NB=5-SD-TBS-Time'),
             ('probe17-F=60-NR=98291669-NB=15-SD-TBS-Time', 'output17-F=60-NR=98291669-NB=15-SD-TBS-Time'),
             ('probe24-F=30-NR=98291669-NB=5-SD-TBS-Time', 'output24-F=30-NR=98291669-NB=5-SD-TBS-Time'),
-            ('probe12-F=200-NR=98291669-NB=15-SD-TBS-Time', 'output12-F=200-NR=98291669-NB=15-SD-TBS-Time')
+            ('probe12-F=200-NR=98291669-NB=15-SD-TBS-Time', 'output12-F=200-NR=98291669-NB=15-SD-TBS-Time'),
+            ('0.919819_75_0.007000_0.050000_100_probe.txt', '0.919819_75_0.007000_0.050000_100_pred.txt')
              ]
 
     probes = [p for (p, q) in files]
