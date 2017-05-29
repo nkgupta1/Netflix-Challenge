@@ -91,10 +91,11 @@ class PMF:
 
                 # Compute Objective Function after
                 if batch == self.num_batches - 1:
-                    pred_out = np.sum(np.multiply(self.w_I[np.array(train_vec[:,0], dtype='int32'),:],
-                                                    self.w_C[np.array(train_vec[:,1], dtype='int32'),:]),
+                    inds = (np.random.rand(10000) * train_vec.shape[0]).astype(np.uint32)
+                    pred_out = np.sum(np.multiply(self.w_I[np.array(train_vec[inds,0], dtype='int32'),:],
+                                                    self.w_C[np.array(train_vec[inds,1], dtype='int32'),:]),
                                         axis=1) # mean_inv subtracted
-                    rawErr = pred_out - train_vec[:, 2] + self.mean_inv
+                    rawErr = pred_out - train_vec[inds, 2] + self.mean_inv
                     obj = LA.norm(rawErr) ** 2 \
                             + 0.5*self._lambda*(LA.norm(self.w_I) ** 2 + LA.norm(self.w_C) ** 2)
 
@@ -102,8 +103,9 @@ class PMF:
 
                 # Compute validation error
                 if batch == self.num_batches - 1:
-                    pred_out = np.sum(np.multiply(self.w_I[np.array(val_vec[:,0], dtype='int32'),:],
-                                                    self.w_C[np.array(val_vec[:,1], dtype='int32'),:]),
+                    inds = (np.random.rand(10000) * val_vec.shape[0]).astype(np.uint32)
+                    pred_out = np.sum(np.multiply(self.w_I[np.array(val_vec[inds,0], dtype='int32'),:],
+                                                    self.w_C[np.array(val_vec[inds,1], dtype='int32'),:]),
                                         axis=1) # mean_inv subtracted
                     rawErr = pred_out - val_vec[:, 2] + self.mean_inv
                     self.err_val.append(LA.norm(rawErr)/np.sqrt(pairs_va))
