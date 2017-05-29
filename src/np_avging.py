@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from old_cache import *
+from cache import *
 
 data = np_read() #[user, movie, date, rating]
 data = data[data[:, 3] != 0]

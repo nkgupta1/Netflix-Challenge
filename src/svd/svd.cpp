@@ -180,6 +180,7 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
     float pred;
     float before_E_in, E_in, E_out;
     float min_E_out = 100;
+    
     int num_grad_issues = 0;
     float org_eta = eta;
     // this variable contains the number of times that E_out has consecutively
@@ -242,17 +243,25 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
 
         printf("iteration %3d:\tE_in: %1.5f\tE_out: %1.5f\tdel E_out: %1.7f\tdel E\'s: %1.7f\n", 
             epoch, E_in, E_out, min_E_out - E_out, E_out - E_in);
-
+        
         if (E_out < min_E_out) {
             min_E_out = E_out;
             count_E_out_up = 0;
             // save_matrices(toRet, E_out, org_eta, reg, epoch);
         } else {
+<<<<<<< HEAD
             // eta = adaptive_learning_rate * eta;
             count_E_out_up++;
             // if (count_E_out_up > 4) {
             //     break;
             // }
+=======
+            count_E_out_up++;
+            eta = adaptive_learning_rate * eta;
+            if (count_E_out_up > 4) {
+                break;
+            }
+>>>>>>> 143de2c0f69234d01c2d0d335e2f40b296f1a0db
         }
 
         // check termination condition

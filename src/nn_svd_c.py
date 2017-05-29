@@ -14,9 +14,10 @@ from keras.utils.np_utils import to_categorical
 
 
 class NN:
-    def __init__(self, mode='both', folder='svd3', biases=True, epochs=12, 
-        layers=(4096, 512, 128), dropouts=(.7, .7, .7), valid_per=1, 
-        save_epochs=[1, 3, 6], w_reg=0.005, b_reg=0.005, ratings_vector=True):
+    def __init__(self, mode='bag', folder='svd3', biases=True, epochs=2, 
+        layers=(300, 1200, 300), dropouts=(0.2, 0.2, 0.2), valid_per=0, 
+        save_epochs=[], w_reg=0.0005, b_reg=0.0005, ratings_vector=False, 
+        bag_dir='blend2', bags=128):
         '''
         Uses the svd latent factors in the folder data/arg:folder to train a 
         neural network along with indices and ratings in base (uses biases if 
@@ -47,7 +48,7 @@ class NN:
         # number of blocks to split the data into b/c of memory limitations:
         # provides much better performance than swapping >20gb in/out while 
         # training. the optimal number is dependent on individual hardware
-        self.num_blocks = 4000
+        self.num_blocks = 1000
         
         # name of dataset to use for validation data
         self.valid_data = 'probe'
@@ -76,6 +77,12 @@ class NN:
         elif mode == 'svd':
             self.read_data()
             self.get_svd_rmse()
+        elif mode == 'bag':
+            self.read_data()
+            for b in range(1, bags + 1):
+                self.model = None
+                self.train()
+                self.predict(save_name=(bag_dir + '/' + str(b)))
 
 
     def load_model(self, name):
@@ -350,7 +357,7 @@ class NN:
         print('making predictions...', testx.shape)
         qual_ratings = self.model.predict(testx)
         if self.ratings_vector:
-            qual_ratings = (np.argmax(qual_ratings, axis=1) + 1).astype(np.float32)
+            qual_ratings = np.sum(qual_ratings * np.arange(1, 6), axis=1)
         else:
             qual_ratings = qual_ratings[:, 0]
         # undo pre-processing with means using self.data_mean, self.a, self.b
@@ -444,7 +451,7 @@ class RMSE(keras.callbacks.Callback):
         '''
         predictions = self.model.predict(self.testx)
         if self.ratings_vector:
-            predictions = (np.argmax(predictions, axis=1) + 1).astype(np.float32)
+            predictions = np.sum(predictions * np.arange(1, 6), axis=1)
         else:
             predictions = predictions[:, 0]
         rmse = np.sqrt(np.mean((predictions - self.valid_ratings) ** 2))
