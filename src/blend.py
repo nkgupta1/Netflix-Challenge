@@ -60,6 +60,20 @@ def probe_blend(probe_files=None, qual_files=None, save_name='p_blend', director
 
     print('\nMaking submission...')
     submission = np.dot(alphas, A)
+
+    # near integer round off
+    # margin = 0.02
+    # mask = submission % 1
+    # submission[mask < margin] -= mask[mask < margin]
+
+    # mask = 1 - (submission % 1)
+    # submission[mask < margin] += mask[mask < margin]
+
+    # fixing pred < 1 and 5 < pred
+    submission[submission < 1] = 1
+    submission[5 < submission] = 5
+    
+
     np.savetxt(directory + save_name + '.dta', submission, fmt='%.3f', newline='\n')
     print('Finished! saved submission.')
 
@@ -111,23 +125,23 @@ if __name__ == '__main__':
             ('c-nnsvd-k50-e3-layers(512, 1024, 256)-dropouts(None, 0.8, 0.8)-regs0.0,0.0-rmse0.855.h5-probe.dta', 
              'c-nnsvd-k50-e3-layers(512, 1024, 256)-dropouts(None, 0.8, 0.8)-regs0.0,0.0-rmse0.855.h5.dta'),
             # RBM
-            ('rbm_200_5_0005_probe.mat', 'rbm_200_5_0005_qual.mat'),
-            ('rbm_100_overfit_probe.mat', 'rbm_100_overfit_qual.mat'),
-            ('rbm_100_5_0001_probe.mat', 'rbm_100_5_0001_qual.mat'),
-            ('rbm_100_3_0001_probe.mat', 'rbm_100_3_0001_qual.mat'),
+            ('rbm_200_5_0005_probe.mat', 'new_rbm_200_5_0005_qual.mat'),
+            ('rbm_100_overfit_probe.mat', 'new_rbm_100_overfit_qual.mat'),
+            ('rbm_100_5_0001_probe.mat', 'new_rbm_100_5_0001_qual.mat'),
+            ('rbm_100_3_0001_probe.mat', 'new_rbm_100_3_0001_qual.mat'),
             # SVDs
             # overfit
             ('OVERFIT_0.949640_50_0.010000_0.030000_150_probe.txt',  'OVERFIT_0.949640_50_0.010000_0.030000_150_qual.txt'),
             ('OVERFIT_0.949723_100_0.010000_0.030000_100_probe.txt', 'OVERFIT_0.949723_100_0.010000_0.030000_100_qual.txt'),
             # biases
-            ('BEST_NAIVE_SVD_0.917174_50_0.010000_0.030000_100_probe.txt', 'BEST_NAIVE_SVD_0.917174_50_0.010000_0.030000_100_qual.txt'),
-            ('0.919819_75_0.007000_0.050000_100_probe.txt',                               '0.919819_75_0.007000_0.050000_100_pred.txt'),
+            ('BEST_NAIVE_SVD_0.917174_50_0.010000_0.030000_100_probe.txt', 'BEST_NAIVE_SVD_NEW_base+probe_0.886011_50_0.007000_0.050000_4_pred.txt'),
+            ('0.919819_75_0.007000_0.050000_100_probe.txt',                                              '0.919819_75_0.007000_0.050000_100_pred.txt'),
             # something....
             ('probe22-F=50-NR=98291669-NB=30-SD',           'output22-F=50-NR=98291669-NB=30-SD'),
             # timesvd++
             ('probe24-F=10-NR=98291669-NB=5-SD-TBS-Time',   'output24-F=10-NR=98291669-NB=5-SD-TBS-Time'),
             ('probe10-F=30-NR=98291669-NB=5-SD-TBS-Time',   'output10-F=30-NR=98291669-NB=5-SD-TBS-Time'),
-            ('probe18-F=60-NR=98291669-NB=5-SD-TBS-Time',   'output18-F=60-NR=98291669-NB=5-SD-TBS-Time'),
+            ('probe18-F=60-NR=98291669-NB=5-SD-TBS-Time',   'NEW_output18-F=60-NR=99666408-NB=5-SD-TBS-Time'),
             ('probe14-F=250-NR=98291669-NB=5-SD-TBS-Time',  'output14-F=250-NR=98291669-NB=5-SD-TBS-Time'),
             ('probe17-F=60-NR=98291669-NB=15-SD-TBS-Time',  'output17-F=60-NR=98291669-NB=15-SD-TBS-Time'),
             ('probe24-F=30-NR=98291669-NB=5-SD-TBS-Time',   'output24-F=30-NR=98291669-NB=5-SD-TBS-Time'),

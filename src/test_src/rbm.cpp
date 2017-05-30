@@ -5,9 +5,9 @@
 #define NUM_FACT 200
 #define ANNEAL 5
 #define WEIGHTCOST 0.005
-#define SFILE "rbm_100_overfit.mat"
-#define PFILE "rbm_100_overfit_qual.mat"
-#define VFILE "rbm_100_overfit_probe.mat"
+#define SFILE "rbm_200_5_0005.mat"
+#define PFILE "new_rbm_200_5_0005_qual.mat"
+#define VFILE "new_rbm_200_5_0005_probe.mat"
 
 // Model parameters from following paper:
 // http://www.montefiore.ulg.ac.be/~glouppe/pdf/msc-thesis.pdf
@@ -91,6 +91,7 @@ RBM::RBM(const string rbm_file) {
 
     // Load data file - this will allow us to reload the data
     ifs >> data_file;
+    data_file = "../../data/um/base+probe_all.dta";
     // Load valid file - this will allow us to reload the valid set
     ifs >> valid_file;
     // Load qual file - this will allow us to reload the qual set
@@ -910,7 +911,7 @@ int main() {
     //     printf("\nOverall E_in: %f    Overall RMSE: %f\n", ein, rmse);
     //     runcount++;
     // }
-    RBM rbm2 = RBM(SFILE);
-    rbm2.predict(PFILE);
-    rbm2.validate(1,458293,rbm2.valid,rbm2.valid_idxs);
+    RBM rbm = RBM(SFILE);
+    rbm.predict(PFILE);
+    // rbm2.validate(1,458293,rbm2.valid,rbm2.valid_idxs);
 }

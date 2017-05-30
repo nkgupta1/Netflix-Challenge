@@ -41,7 +41,7 @@ void Processing::split(const string data, const string ids) {
     ifstream idsfile(ids);
 
     // Output files
-    ofstream base(dir + "/base_" + file);
+    ofstream base(dir + "/base+probe_" + file);
     // ofstream valid(dir + "/valid_" + file);
     // ofstream hidden(dir + "/hidden_" + file);
     ofstream probe(dir + "/probe_" + file);
@@ -56,6 +56,7 @@ void Processing::split(const string data, const string ids) {
         } else if (id == 3) {
             base << u << " " << m << " " << d << " " << r << "\n";
         } else if (id == 4) {
+            base  << u << " " << m << " " << d << " " << r << "\n";
             probe << u << " " << m << " " << d << " " << r << "\n";
         } else if (id == 5) {
             qual << u << " " << m << " " << d << " " << r << "\n";
@@ -345,8 +346,8 @@ void Processing::user_average() {
  * Generates about 6 gigabytes of files. 
  */
 int main() {
-    // Processing::split("../../data/um/all.dta", "../../data/um/all.idx");
-    Processing::split("../../data/mu/all.dta", "../../data/mu/all.idx");
+    Processing::split("../../data/um/all.dta", "../../data/um/all.idx");
+    // Processing::split("../../data/mu/all.dta", "../../data/mu/all.idx");
     printf("Dataset split\n");
 
     // float ave = find_average("hashe_data/um/base_test.dta");

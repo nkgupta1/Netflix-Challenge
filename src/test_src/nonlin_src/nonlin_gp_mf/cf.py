@@ -206,13 +206,13 @@ def predict(user, test_items, model, dataset):
 
 
 def perf_weak(dataset, base_dim=50):
-    print('Data set fetched')
-    print("Dataset desctiption", dataset.get_description())
+    # print('Data set fetched')
+    # print("Dataset desctiption", dataset.get_description())
 
-    model_init = GpMf(latent_dim=base_dim, nb_data=dataset.item_index_range)
-    print('Fit the model...')
-    model = fit(dataset=dataset, model=model_init)
-    print('Model fitted')
+    # model_init = GpMf(latent_dim=base_dim, nb_data=dataset.item_index_range)
+    # print('Fit the model...')
+    # model = fit(dataset=dataset, model=model_init)
+    # print('Model fitted')
 
     # If we already have a fitted model, comment out everything above
     model_final = pickle.load(open("nonlin_gp_model.pkl", "rb"))
