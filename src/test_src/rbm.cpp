@@ -851,66 +851,66 @@ void RBM::predict(const string outfile) {
 }
 
 int main() {
-    // To run: 
-    // Straight Sala
-    RBM rbm = RBM("../../data/um/base_all.dta", "../../data/um/probe_all.dta", 
-                  "../../data/um/qual_all.dta", NUM_FACT);
-    // RBM rbm = RBM("test_data/um/base_test.dta", "test_data/um/probe_test.dta", 
-    //               "test_data/um/qual_test.dta", 200);
-    int tsteps = 1;
-    float best = 10;
-    float prmse = 10;
-    float rmse = 5;
-    int runcount = 0;
-    int failcount = 0;
+    // // To run: 
+    // // Straight Sala
+    // RBM rbm = RBM("../../data/um/base_all.dta", "../../data/um/probe_all.dta", 
+    //               "../../data/um/qual_all.dta", NUM_FACT);
+    // // RBM rbm = RBM("test_data/um/base_test.dta", "test_data/um/probe_test.dta", 
+    // //               "test_data/um/qual_test.dta", 200);
+    // int tsteps = 1;
+    // float best = 10;
+    // float prmse = 10;
+    // float rmse = 5;
+    // int runcount = 0;
+    // int failcount = 0;
 
-    while ((rmse < prmse) || (failcount < 3)) {
-        for (int i = 0; i < 4580; i++) {
-            rbm.train((i*100)+1,(i+1)*100, tsteps);
-            // rbm.train(i,i,tsteps,rand_array);
-            if ((i % 10) == 1) {
-                printf(".");
-                fflush(stdout);
-            }
-            if (((i+1) % 500) == 0) {
-                // float ein_t = rbm.validate(448001,458000, rbm.data, rbm.data_idxs);
-                // float rmse_t = rbm.validate(448001,458000, rbm.valid, rbm.valid_idxs);
-                // printf("    E_in: %f    E_valid: %f\n", ein_t, rmse_t);
-                printf("\n");
-            }
-        }
-        rbm.train(458001,458293,tsteps);
+    // while ((rmse < prmse) || (failcount < 3)) {
+    //     for (int i = 0; i < 4580; i++) {
+    //         rbm.train((i*100)+1,(i+1)*100, tsteps);
+    //         // rbm.train(i,i,tsteps,rand_array);
+    //         if ((i % 10) == 1) {
+    //             printf(".");
+    //             fflush(stdout);
+    //         }
+    //         if (((i+1) % 500) == 0) {
+    //             // float ein_t = rbm.validate(448001,458000, rbm.data, rbm.data_idxs);
+    //             // float rmse_t = rbm.validate(448001,458000, rbm.valid, rbm.valid_idxs);
+    //             // printf("    E_in: %f    E_valid: %f\n", ein_t, rmse_t);
+    //             printf("\n");
+    //         }
+    //     }
+    //     rbm.train(458001,458293,tsteps);
 
-        runcount++;
-        if (rbm.anneal) {
-            rbm.eps_w = 0.0015/(1 + (runcount/rbm.anneal));
-            rbm.eps_vis = 0.0012/(1 + (runcount/rbm.anneal));
-            rbm.eps_hid = 0.1/(1 + (runcount/rbm.anneal));
-        }
+    //     runcount++;
+    //     if (rbm.anneal) {
+    //         rbm.eps_w = 0.0015/(1 + (runcount/rbm.anneal));
+    //         rbm.eps_vis = 0.0012/(1 + (runcount/rbm.anneal));
+    //         rbm.eps_hid = 0.1/(1 + (runcount/rbm.anneal));
+    //     }
 
-        prmse = rmse;
+    //     prmse = rmse;
 
-        float ein = rbm.validate(448001,458000,rbm.data,rbm.data_idxs);
-        rmse = rbm.validate(448001,458000, rbm.valid, rbm.valid_idxs);
+    //     float ein = rbm.validate(448001,458000,rbm.data,rbm.data_idxs);
+    //     rmse = rbm.validate(448001,458000, rbm.valid, rbm.valid_idxs);
 
-        if (rmse < best) {
-            best = rmse;
-            rbm.save(SFILE);
-            failcount = 0;
-        } else {
-            failcount++;
-        }
+    //     if (rmse < best) {
+    //         best = rmse;
+    //         rbm.save(SFILE);
+    //         failcount = 0;
+    //     } else {
+    //         failcount++;
+    //     }
 
-        // If failing too much, up cd steps
-        if (failcount == 2) {
-            printf("Incrementing tsteps.\n");
-            tsteps += 2;
-        }
+    //     // If failing too much, up cd steps
+    //     if (failcount == 2) {
+    //         printf("Incrementing tsteps.\n");
+    //         tsteps += 2;
+    //     }
 
-        printf("\nOverall E_in: %f    Overall RMSE: %f\n", ein, rmse);
-        runcount++;
-    }
+    //     printf("\nOverall E_in: %f    Overall RMSE: %f\n", ein, rmse);
+    //     runcount++;
+    // }
     RBM rbm2 = RBM(SFILE);
     rbm2.predict(PFILE);
-    rbm2.validate(1,458293,rbm2.data,rbm2.data_idxs);
+    rbm2.validate(1,458293,rbm2.valid,rbm2.valid_idxs);
 }

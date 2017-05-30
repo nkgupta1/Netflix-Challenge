@@ -107,6 +107,14 @@ if __name__ == '__main__':
             ('pmf-probe-e13-t0.822-v0.941.dta', 'pmf-qual-e13-t0.822-v0.941.dta'),
             # NNMF
             ('probe-nnmf-k150-e100-rmse0.767.dta', 'qual-nnmf-k150-e100-rmse0.767.dta'),
+            # NNSVD
+            ('c-nnsvd-k50-e3-layers(512, 1024, 256)-dropouts(None, 0.8, 0.8)-regs0.0,0.0-rmse0.855.h5-probe.dta', 
+             'c-nnsvd-k50-e3-layers(512, 1024, 256)-dropouts(None, 0.8, 0.8)-regs0.0,0.0-rmse0.855.h5.dta'),
+            # RBM
+            ('rbm_200_5_0005_probe.mat', 'rbm_200_5_0005_qual.mat'),
+            ('rbm_100_overfit_probe.mat', 'rbm_100_overfit_qual.mat'),
+            ('rbm_100_5_0001_probe.mat', 'rbm_100_5_0001_qual.mat'),
+            ('rbm_100_3_0001_probe.mat', 'rbm_100_3_0001_qual.mat'),
             # SVDs
             # overfit
             ('OVERFIT_0.949640_50_0.010000_0.030000_150_probe.txt',  'OVERFIT_0.949640_50_0.010000_0.030000_150_qual.txt'),
@@ -134,11 +142,11 @@ if __name__ == '__main__':
 
     print('blending on ' + str(len(probes)) + ' models\n')
 
-    # probe_blend(probes, quals, directory='/home/nkgupta/tmp/BLENDING/')
+    probe_blend(probes, quals, directory='/home/nkgupta/tmp/BLENDING/')
     # mean_blend(['1', '2', '3', '4'], directory='../data/blend1/')
     # qual_blend(quals, directory='/home/nkgupta/tmp/BLENDING/')
 
     # Blend with gradient boosted regressors
-    make_grad(probes, directory='/home/nkgupta/tmp/BLENDING/')
-    eval_grad(quals, directory='/home/nkgupta/tmp/BLENDING/')
+    # make_grad(probes, directory='/home/nkgupta/tmp/BLENDING/')
+    # eval_grad(quals, directory='/home/nkgupta/tmp/BLENDING/')
     

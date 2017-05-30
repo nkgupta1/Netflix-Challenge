@@ -255,9 +255,9 @@ def perf_weak(dataset, base_dim=50):
 #
 import pandas as pd
 
-data_file = "../../../../Netflix-Challenge/data/um/base_all.dta"
-valid_file = "../../../../Netflix-Challenge/data/um/probe_all.dta"
-qual_file = "../../../../Netflix-Challenge/data/um/qual_all.dta"
+data_file = "../../../../data/um/base_all.dta"
+valid_file = "../../../../data/um/probe_all.dta"
+qual_file = "../../../../data/um/qual_all.dta"
 
 vf = pd.read_csv(valid_file, sep =" ", header=None)
 vf.columns = ['user_id', 'item_id', 'timestamp', 'rating']
