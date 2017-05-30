@@ -22,7 +22,7 @@ def make_grad(probe_files, directory, model_name='grad_mod'):
     A = read_files(directory, probe_files).T
     s = read_arr('probe')[:, 3].astype(np.float32)
 
-    clf = GradientBoostingRegressor(n_estimators=30, verbose=2)
+    clf = GradientBoostingRegressor(n_estimators=50, verbose=2)
     clf.fit(A,s)
 
     joblib.dump(clf, model_name + ".pkl")
@@ -37,7 +37,7 @@ def eval_grad(qual_files, directory, save_name='g_blend', model_name='grad_mod')
     np.savetxt(directory + save_name + '.dta', preds, fmt='%.3f', newline='\n')
     print('Finished! saved submission.')
 
-def probe_blend(qual_files=None, save_name='p_blend', directory='blend0'):
+def probe_blend(probe_files=None, qual_files=None, save_name='p_blend', directory='blend0'):
     # note that qual files and probe files must be in the same order!
     print('Blending on probe...')
     # directory = '../data/submissions/' + directory + '/'
@@ -101,7 +101,12 @@ if __name__ == '__main__':
             ('average_probe', 'average_qual'),
             # KNNs
             ('probe-KNN-', 'qual-KNN-'),
-            ('final_unprocessed_probe_pred_50.dta', 'final_unprocessed_qual_pred_50.dta'),
+            ('final_unprocessed_probe_pred_50.dta',  'final_unprocessed_qual_pred_50.dta'),
+            ('final_unprocessed_probe_pred_100.dta', 'final_unprocessed_qual_pred_100.dta'),
+            # PMF
+            ('pmf-probe-e13-t0.822-v0.941.dta', 'pmf-qual-e13-t0.822-v0.941.dta'),
+            # NNMF
+            ('probe-nnmf-k150-e100-rmse0.767.dta', 'qual-nnmf-k150-e100-rmse0.767.dta'),
             # SVDs
             # overfit
             ('OVERFIT_0.949640_50_0.010000_0.030000_150_probe.txt',  'OVERFIT_0.949640_50_0.010000_0.030000_150_qual.txt'),
@@ -127,11 +132,13 @@ if __name__ == '__main__':
 
     assert(len(probes) == len(quals))
 
+    print('blending on ' + str(len(probes)) + ' models\n')
+
     # probe_blend(probes, quals, directory='/home/nkgupta/tmp/BLENDING/')
     # mean_blend(['1', '2', '3', '4'], directory='../data/blend1/')
     # qual_blend(quals, directory='/home/nkgupta/tmp/BLENDING/')
 
     # Blend with gradient boosted regressors
-    make_grad(probes, directory='blending/')
-    eval_grad(quals, directory='blending/')
+    make_grad(probes, directory='/home/nkgupta/tmp/BLENDING/')
+    eval_grad(quals, directory='/home/nkgupta/tmp/BLENDING/')
     
