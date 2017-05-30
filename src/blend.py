@@ -113,10 +113,14 @@ if __name__ == '__main__':
     files = [
             # global
             ('average_probe', 'average_qual'),
+            ('avg_avg_probe.txt', 'avg_avg_qual.txt'),
             # KNNs
             ('probe-KNN-', 'qual-KNN-'),
             ('final_unprocessed_probe_pred_50.dta',  'final_unprocessed_qual_pred_50.dta'),
             ('final_unprocessed_probe_pred_100.dta', 'final_unprocessed_qual_pred_100.dta'),
+
+            ('final_unprocessed_probe_pred_600.dta', 'final_unprocessed_qual_pred_600.dta'),
+
             # PMF
             ('pmf-probe-e13-t0.822-v0.941.dta', 'pmf-qual-e13-t0.822-v0.941.dta'),
             # NNMF
@@ -140,12 +144,26 @@ if __name__ == '__main__':
             ('probe22-F=50-NR=98291669-NB=30-SD',           'output22-F=50-NR=98291669-NB=30-SD'),
             # timesvd++
             ('probe24-F=10-NR=98291669-NB=5-SD-TBS-Time',   'output24-F=10-NR=98291669-NB=5-SD-TBS-Time'),
-            ('probe10-F=30-NR=98291669-NB=5-SD-TBS-Time',   'output10-F=30-NR=98291669-NB=5-SD-TBS-Time'),
-            ('probe18-F=60-NR=98291669-NB=5-SD-TBS-Time',   'NEW_output18-F=60-NR=99666408-NB=5-SD-TBS-Time'),
-            ('probe14-F=250-NR=98291669-NB=5-SD-TBS-Time',  'output14-F=250-NR=98291669-NB=5-SD-TBS-Time'),
-            ('probe17-F=60-NR=98291669-NB=15-SD-TBS-Time',  'output17-F=60-NR=98291669-NB=15-SD-TBS-Time'),
             ('probe24-F=30-NR=98291669-NB=5-SD-TBS-Time',   'output24-F=30-NR=98291669-NB=5-SD-TBS-Time'),
+
+
+
+            # ('probe10-F=30-NR=98291669-NB=5-SD-TBS-Time',   'NEW_output10-F=30-NR=99666408-NB=5-SD-TBS-Time'),
+            ('probe10-F=30-NR=98291669-NB=5-SD-TBS-Time',   'output10-F=30-NR=98291669-NB=5-SD-TBS-Time'),
+
+            ('probe18-F=60-NR=98291669-NB=5-SD-TBS-Time',   'NEW_output18-F=60-NR=99666408-NB=5-SD-TBS-Time'),
+            # ('probe18-F=60-NR=98291669-NB=5-SD-TBS-Time',   'output18-F=60-NR=98291669-NB=5-SD-TBS-Time'),
+
+            # ('probe14-F=250-NR=98291669-NB=5-SD-TBS-Time',  'NEW_output14-F=250-NR=99666408-NB=5-SD-TBS-Time'),
+            ('probe14-F=250-NR=98291669-NB=5-SD-TBS-Time',  'output14-F=250-NR=98291669-NB=5-SD-TBS-Time'),
+
             ('probe12-F=200-NR=98291669-NB=15-SD-TBS-Time', 'output12-F=200-NR=98291669-NB=15-SD-TBS-Time'),
+
+            # REALLY BAD
+            # ('probe17-F=60-NR=98291669-NB=15-SD-TBS-Time',  'NEW_output17-F=60-NR=99666408-NB=15-SD-TBS-Time'),
+            ('probe17-F=60-NR=98291669-NB=15-SD-TBS-Time',  'output17-F=60-NR=98291669-NB=15-SD-TBS-Time'),
+
+            # ('probe12-F=250-NR=98291669-NB=1-SD-TBS-Time',  'NEW_output12-F=250-NR=99666408-NB=1-SD-TBS-Time')
             ('probe12-F=250-NR=98291669-NB=1-SD-TBS-Time',  'output12-F=250-NR=98291669-NB=1-SD-TBS-Time')
              ]
 
