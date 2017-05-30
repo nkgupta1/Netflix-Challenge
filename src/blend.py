@@ -22,7 +22,7 @@ def make_grad(probe_files, directory, model_name='grad_mod'):
     A = read_files(directory, probe_files).T
     s = read_arr('probe')[:, 3].astype(np.float32)
 
-    clf = GradientBoostingRegressor(n_estimators=50, verbose=2)
+    clf = GradientBoostingRegressor(n_estimators=100, verbose=2)
     clf.fit(A,s)
 
     joblib.dump(clf, model_name + ".pkl")
@@ -182,7 +182,7 @@ if __name__ == '__main__':
 
     print('blending on ' + str(len(probes)) + ' models\n')
 
-    probe_blend(probes, quals, directory='/home/nkgupta/tmp/BLENDING/')
+    # probe_blend(probes, quals, directory='/home/nkgupta/tmp/BLENDING/')
     # mean_blend(['1', '2', '3', '4'], directory='../data/blend1/')
     # qual_blend(quals, directory='/home/nkgupta/tmp/BLENDING/')
 

@@ -81,9 +81,13 @@ for line in g:
 		movie_averages[m-1,1] += 1 # Scale up base
 		movie_averages[m-1,0] /= movie_averages[m-1,1] # Scale down
 
+print('.')
+print(user_averages)
+print(movie_averages)
+
 # Next, re-run with base+probe for the qual stuff
-f = open('avg_avg_probe.txt','w')
-h = open("../data/um/probe_all.dta")
+f = open('avg_avg_qual.txt','w')
+h = open("../data/um/qual_all.dta")
 for line in h:
 	lst = line.split()
 	u = int(lst[0])

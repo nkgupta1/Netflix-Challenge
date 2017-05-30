@@ -57,7 +57,7 @@ void Processing::split(const string data, const string ids) {
             base << u << " " << m << " " << d << " " << r << "\n";
         } else if (id == 4) {
             // Now we're predicting using probe!!!
-            // base  << u << " " << m << " " << d << " " << r << "\n";
+            base  << u << " " << m << " " << d << " " << r << "\n";
             probe << u << " " << m << " " << d << " " << r << "\n";
         } else if (id == 5) {
             qual << u << " " << m << " " << d << " " << r << "\n";
