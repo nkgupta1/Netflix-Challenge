@@ -2,12 +2,12 @@
 
 #define opt 1
 #define discretize 1
-#define NUM_FACT 200
+#define NUM_FACT 10
 #define ANNEAL 5
-#define WEIGHTCOST 0.005
-#define SFILE "rbm_100_overfit.mat"
-#define PFILE "new_rbm_100_overfit_qual.mat"
-#define VFILE "new_rbm_100_overfit_probe.mat"
+#define WEIGHTCOST 0.001
+#define SFILE "rbm_non_discrete.mat"
+#define PFILE "new_non_discrete_qual.mat"
+#define VFILE "new_non_discrete_probe.mat"
 
 // Model parameters from following paper:
 // http://www.montefiore.ulg.ac.be/~glouppe/pdf/msc-thesis.pdf
@@ -870,8 +870,8 @@ void RBM::predict(const string outfile) {
 }
 
 int main() {
-    // // To run: 
-    // // Straight Sala
+    // To run: 
+    // Straight Sala
     // RBM rbm = RBM("../../data/um/base_all.dta", "../../data/um/probe_all.dta", 
     //               "../../data/um/qual_all.dta", NUM_FACT);
     // // RBM rbm = RBM("test_data/um/base_test.dta", "test_data/um/probe_test.dta", 
@@ -909,8 +909,8 @@ int main() {
 
     //     prmse = rmse;
 
-    //     float ein = rbm.validate(448001,458000,rbm.data,rbm.data_idxs);
-    //     rmse = rbm.validate(448001,458000, rbm.valid, rbm.valid_idxs);
+    //     // float ein = rbm.validate(448001,458000,rbm.data,rbm.data_idxs);
+    //     // rmse = rbm.validate(448001,458000, rbm.valid, rbm.valid_idxs);
 
     //     if (rmse < best) {
     //         best = rmse;
@@ -926,15 +926,16 @@ int main() {
     //         tsteps += 2;
     //     }
 
-    //     printf("\nOverall E_in: %f    Overall RMSE: %f\n", ein, rmse);
+    //     // printf("\nOverall E_in: %f    Overall RMSE: %f\n", ein, rmse);
     //     runcount++;
+    //     break;
     // }
-    // RBM rbm2 = RBM(SFILE);
-    // rbm2.predict(PFILE);
-    // rbm2.validate(1,458293,rbm2.valid,rbm2.valid_idxs);
+    RBM rbm2 = RBM(SFILE);
+    rbm2.predict(PFILE);
+    rbm2.validate(1,458293,rbm2.valid,rbm2.valid_idxs);
 
     // PURIFY
-    RBM rbm = RBM(SFILE);
-    // But now, probe is inside of the dataset! All is good.
-    rbm.predict(PFILE);
+    // RBM rbm = RBM(SFILE);
+    // // But now, probe is inside of the dataset! All is good.
+    // rbm.predict(PFILE);
 }
