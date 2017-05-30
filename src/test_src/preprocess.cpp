@@ -41,7 +41,7 @@ void Processing::split(const string data, const string ids) {
     ifstream idsfile(ids);
 
     // Output files
-    ofstream base(dir + "/base+probe_" + file);
+    ofstream base(dir + "/base_" + file);
     // ofstream valid(dir + "/valid_" + file);
     // ofstream hidden(dir + "/hidden_" + file);
     ofstream probe(dir + "/probe_" + file);
@@ -56,7 +56,8 @@ void Processing::split(const string data, const string ids) {
         } else if (id == 3) {
             base << u << " " << m << " " << d << " " << r << "\n";
         } else if (id == 4) {
-            base  << u << " " << m << " " << d << " " << r << "\n";
+            // Now we're predicting using probe!!!
+            // base  << u << " " << m << " " << d << " " << r << "\n";
             probe << u << " " << m << " " << d << " " << r << "\n";
         } else if (id == 5) {
             qual << u << " " << m << " " << d << " " << r << "\n";

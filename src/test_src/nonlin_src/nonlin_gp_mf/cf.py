@@ -224,8 +224,11 @@ def perf_weak(dataset, base_dim=50):
     probe_length = 1374739
     qual_length = 2749898
 
-    probe_preds = np.zeros(probe_length)
-    qual_preds = np.zeros(qual_length)
+    # probe_preds = np.zeros(probe_length)
+    # qual_preds = np.zeros(qual_length)
+
+    f = open('cf_probe_preds2.dta', 'w')
+    g = open('cf_qual_preds.dta', 'w')
 
     for i in range(probe_length):
         pred = predict(vf.loc[i]['user_id'],vf.loc[i]['item_id']-1,model_final,dataset)
@@ -233,20 +236,35 @@ def perf_weak(dataset, base_dim=50):
             pred = 5
         if pred < 1:
             pred = 1
+        if pred is None:
+            pred = 3.6
 
-        probe_preds[i] = pred
+        # probe_preds[i] = pred
+        f.write(str(vf.loc[i]['user_id'])+' '+str(vf.loc[i]['item_id'])+' '+str(float(pred))+'\n')
+        if (((i+1) % 500000) == 0):
+            print('.')
+        elif (((i+1) % 10000) == 0):
+            print('.', end='', flush=True)
 
+    print('.')
     for i in range(qual_length):
         pred = predict(qf.loc[i]['user_id'],qf.loc[i]['item_id']-1,model_final,dataset)
         if pred > 5:
             pred = 5
         if pred < 1:
             pred = 1
+        if pred is None:
+            pred = 3.6
 
-        qual_preds[i] = pred
+        # qual_preds[i] = pred
+        g.write(str(qf.loc[i]['user_id'])+' '+str(qf.loc[i]['item_id'])+' '+str(float(pred))+'\n')
+        if (((i+1) % 500000) == 0):
+            print('.')
+        elif (((i+1) % 10000) == 0):
+            print('.', end='', flush=True)
 
-    np.savetxt('cf_probe_preds.dta', probe_preds, fmt='%.3f', newline='\n')
-    np.savetxt('cf_qual_preds.dta', qual_preds, fmt='%.3f', newline='\n')
+    # np.savetxt('cf_probe_preds.dta', probe_preds, fmt='%.3f', newline='\n')
+    # np.savetxt('cf_qual_preds.dta', qual_preds, fmt='%.3f', newline='\n')
 
     return
 
@@ -272,6 +290,7 @@ if __name__ == "__main__":
     # MovieLens dataset 100k
     # dataset=DataSet(dataset="movielens")
     perf_weak(dataset=DataSet(data_file), base_dim=30)
+    # perf_weak('stupid',base_dim=30)
     # MovieLens dataset 1M
     #perf_weak(dataset=DataSet(dataset="movielens", size="M"))
     # Toy dataset
