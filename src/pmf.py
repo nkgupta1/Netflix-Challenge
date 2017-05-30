@@ -1,10 +1,17 @@
+#!/usr/bin/env python
+
 import numpy as np
 from numpy import linalg as LA
 from cache import *
 
 class PMF:
+<<<<<<< HEAD
     def __init__(self, num_feat=200, epsilon=0.005, _lambda=0.05, momentum=0.4, 
             maxepoch=50, num_batches=10, batch_size=100000):
+=======
+    def __init__(self, num_feat=60, epsilon=0.01, _lambda=0.1, momentum=0.8, 
+            maxepoch=20, num_batches=10, batch_size=100000):
+>>>>>>> 8e4e240db1b8f87938b5095c60f647b31b7520e9
         self.num_feat = num_feat
         self.epsilon = epsilon
         self._lambda = _lambda
@@ -50,7 +57,7 @@ class PMF:
 
             # Batch update
             for batch in range(self.num_batches):
-                print "epoch %d batch %d/%d" % (self.epoch, batch+1, self.num_batches)
+                # print "epoch %d batch %d/%d" % (self.epoch, batch+1, self.num_batches)
 
                 batch_idx = np.mod(np.arange(self.batch_size * batch,
                                              self.batch_size * (batch+1)),

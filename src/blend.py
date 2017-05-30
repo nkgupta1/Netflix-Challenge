@@ -4,6 +4,9 @@ import numpy as np
 from cache import *
 import pandas
 
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.externals import joblib
+
 
 def read_files(directory, files):
     A = []
@@ -12,8 +15,29 @@ def read_files(directory, files):
             sep=' ', dtype=np.float32).values[:, 0])
     return np.array(A, dtype=np.float32)
 
+def make_grad(probe_files, directory, model_name='grad_mod'):
+    # note that qual files and probe files must be in the same order!
+    print('Blending on probe with gradients...')
+    # directory = '../data/submissions/' + directory + '/'
+    A = read_files(directory, probe_files).T
+    s = read_arr('probe')[:, 3].astype(np.float32)
 
-def probe_blend(probe_files, qual_files=None, save_name='p_blend', directory='blend0'):
+    clf = GradientBoostingRegressor(n_estimators=30, verbose=2)
+    clf.fit(A,s)
+
+    joblib.dump(clf, model_name + ".pkl")
+
+def eval_grad(qual_files, directory, save_name='g_blend', model_name='grad_mod'):
+    A = read_files(directory, qual_files).T
+
+    clf = joblib.load(model_name + ".pkl")
+    print('\nMaking submission...')
+    # preds = np.sum((clf.predict_proba(A))*np.transpose(clf.classes_),axis=1)
+    preds = clf.predict(A)
+    np.savetxt(directory + save_name + '.dta', preds, fmt='%.3f', newline='\n')
+    print('Finished! saved submission.')
+
+def probe_blend(qual_files=None, save_name='p_blend', directory='blend0'):
     # note that qual files and probe files must be in the same order!
     print('Blending on probe...')
     # directory = '../data/submissions/' + directory + '/'
@@ -90,7 +114,8 @@ if __name__ == '__main__':
             ('probe17-F=60-NR=98291669-NB=15-SD-TBS-Time', 'output17-F=60-NR=98291669-NB=15-SD-TBS-Time'),
             ('probe24-F=30-NR=98291669-NB=5-SD-TBS-Time', 'output24-F=30-NR=98291669-NB=5-SD-TBS-Time'),
             ('probe12-F=200-NR=98291669-NB=15-SD-TBS-Time', 'output12-F=200-NR=98291669-NB=15-SD-TBS-Time'),
-            ('0.919819_75_0.007000_0.050000_100_probe.txt', '0.919819_75_0.007000_0.050000_100_pred.txt')
+            ('0.919819_75_0.007000_0.050000_100_probe.txt', '0.919819_75_0.007000_0.050000_100_pred.txt'),
+            ('probe12-F=250-NR=98291669-NB=1-SD-TBS-Time', 'output12-F=250-NR=98291669-NB=1-SD-TBS-Time')
              ]
 
     probes = [p for (p, q) in files]
@@ -98,8 +123,11 @@ if __name__ == '__main__':
 
     assert(len(probes) == len(quals))
 
-    probe_blend(probes, quals, directory='/home/nkgupta/tmp/BLENDING/')
+    # probe_blend(probes, quals, directory='/home/nkgupta/tmp/BLENDING/')
     # mean_blend(['1', '2', '3', '4'], directory='../data/blend1/')
     # qual_blend(quals, directory='/home/nkgupta/tmp/BLENDING/')
 
-
+    # Blend with gradient boosted regressors
+    make_grad(probes, directory='blending/')
+    eval_grad(quals, directory='blending/')
+    
