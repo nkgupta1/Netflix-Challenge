@@ -130,9 +130,17 @@ if __name__ == '__main__':
              'c-nnsvd-k50-e3-layers(512, 1024, 256)-dropouts(None, 0.8, 0.8)-regs0.0,0.0-rmse0.855.h5.dta'),
             # RBM
             ('rbm_200_5_0005_probe.mat', 'new_rbm_200_5_0005_qual.mat'),
+            # ('rbm_200_5_0005_probe.mat',     'rbm_200_5_0005_qual.mat'),
+
             ('rbm_100_overfit_probe.mat', 'new_rbm_100_overfit_qual.mat'),
+            # ('rbm_100_overfit_probe.mat',     'rbm_100_overfit_qual.mat'),
+
             ('rbm_100_5_0001_probe.mat', 'new_rbm_100_5_0001_qual.mat'),
+            # ('rbm_100_5_0001_probe.mat',     'rbm_100_5_0001_qual.mat'),
+
             ('rbm_100_3_0001_probe.mat', 'new_rbm_100_3_0001_qual.mat'),
+            # ('rbm_100_3_0001_probe.mat',     'rbm_100_3_0001_qual.mat'),
+
             # SVDs
             # overfit
             ('OVERFIT_0.949640_50_0.010000_0.030000_150_probe.txt',  'OVERFIT_0.949640_50_0.010000_0.030000_150_qual.txt'),
