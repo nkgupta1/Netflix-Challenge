@@ -5,9 +5,9 @@
 #define NUM_FACT 200
 #define ANNEAL 5
 #define WEIGHTCOST 0.005
-#define SFILE "rbm_200_5_0005.mat"
-#define PFILE "new_rbm_200_5_0005_qual.mat"
-#define VFILE "new_rbm_200_5_0005_probe.mat"
+#define SFILE "rbm_100_overfit.mat"
+#define PFILE "new_rbm_100_overfit_qual.mat"
+#define VFILE "new_rbm_100_overfit_probe.mat"
 
 // Model parameters from following paper:
 // http://www.montefiore.ulg.ac.be/~glouppe/pdf/msc-thesis.pdf
@@ -91,7 +91,6 @@ RBM::RBM(const string rbm_file) {
 
     // Load data file - this will allow us to reload the data
     ifs >> data_file;
-    data_file = "../../data/um/base+probe_all.dta";
     // Load valid file - this will allow us to reload the valid set
     ifs >> valid_file;
     // Load qual file - this will allow us to reload the qual set
@@ -102,6 +101,21 @@ RBM::RBM(const string rbm_file) {
 
     // Load momentum parameter
     ifs >> mom;
+
+    // Oops didn't save these
+    if (opt) {
+        weightcost = 0.001;
+    }
+    else {
+        weightcost = 0;
+    } 
+
+    if (opt) {
+        anneal = ANNEAL;
+    }
+    else {
+        anneal = 0;
+    }
 
     // Load learning weights
     ifs >> eps_w >> eps_vis >> eps_hid;;
@@ -304,6 +318,10 @@ void RBM::init_pointers() {
         hid_bias[j] = hid_bias[j-1] + 3;
     }
 
+    init_datasets();
+}
+
+void RBM::init_datasets() {
     // Initialize dataset
     int N1 = line_count(data_file);
     data = (int *) calloc(4*N1, sizeof(int));
@@ -911,7 +929,12 @@ int main() {
     //     printf("\nOverall E_in: %f    Overall RMSE: %f\n", ein, rmse);
     //     runcount++;
     // }
-    RBM rbm = RBM(SFILE);
-    rbm.predict(PFILE);
+    // RBM rbm2 = RBM(SFILE);
+    // rbm2.predict(PFILE);
     // rbm2.validate(1,458293,rbm2.valid,rbm2.valid_idxs);
+
+    // PURIFY
+    RBM rbm = RBM(SFILE);
+    // But now, probe is inside of the dataset! All is good.
+    rbm.predict(PFILE);
 }
