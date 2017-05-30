@@ -8,7 +8,7 @@ from keras.layers.core import Dense, Dropout
 
 
 class NN:
-    def __init__(self, mode='predict', K=150, epochs=100, dropouts=(None, None),
+    def __init__(self, mode='probe', K=150, epochs=100, dropouts=(None, None),
             save_epochs='all'):
         self.num_users = 458293
         self.data_mean = 3.60860891887339
@@ -20,25 +20,34 @@ class NN:
 
         self.read_data()
         self.save_name = 'nnmf-' + str(self.K) + '-' + str(self.epochs)
-        # mode = 'predict'
+        
+        to_load = 'nnmf-k150-e100-rmse0.767'
         if mode == 'train':
             self.train()
             self.save_model()
         elif mode == 'predict':
-            self.make_model()
-            self.load_model('nnmf-k150-e100-rmse0.807')
+            self.load_model(to_load)
             self.predict()
         elif mode == 'both':
             self.train()
             self.save_model()
             self.predict()
+        elif mode == 'resume':
+            self.load_model(to_load)
+            self.fit()
+        elif mode == 'probe':
+            self.load_model(to_load)
+            self.save_name += '-probe'
+            self.predict('probe')
         elif mode == 'bag':
             pass # not implemented yet
 
 
     def load_model(self, name):
+        self.make_model()
         self.save_name = name
         self.model.load_weights('../models/' + name + '.h5')
+        print('model loaded:', name)
 
 
     def read_data(self):
@@ -56,25 +65,31 @@ class NN:
     def generate_floats(self):
         # generator to get training data for model
         users = np.zeros((self.block_size, self.num_users), dtype=np.float32)
+        get = False
         while True:
             blocks = np.arange(0, self.num_users, self.block_size)
             np.random.shuffle(blocks)
             blocks = blocks.tolist()
             for u in blocks:
                 if u + self.block_size >= self.num_users:
-                    break
-                user_vecs = users.copy()
+                    get = self.block_size
+                    self.block_size = self.num_users - u
+                    user_vecs = np.zeros((self.block_size, self.num_users), dtype=np.float32)
+                else:
+                    user_vecs = users.copy()
                 user_vecs[np.arange(0, self.block_size), np.arange(u, u + self.block_size)] = 1
                 movie_vecs = self.base[u:u + self.block_size].toarray()
                 yield user_vecs, movie_vecs
+                if get:
+                    self.block_size = get
+                    get = False
 
 
     def make_model(self):
         self.rmse = real_RMSE(self.save_model, self.save_epochs)
         self.model = Sequential()
-        self.model.add(Dense(self.K, input_shape=(self.num_users,), activation='linear'))  # hidden layer
-        if self.dropouts[0]:
-            self.model.add(Dropout(self.dropouts[0]))
+        self.model.add(Dense(self.K, input_shape=(self.num_users,), 
+            activation='linear'))  # hidden layer
         self.model.add(Dense(self.num_movies, activation='linear'))  # output layer
         if self.dropouts[1]:
             self.model.add(Dropout(self.dropouts[1]))
@@ -85,6 +100,9 @@ class NN:
 
     def train(self):
         self.make_model()
+        self.fit()
+
+    def fit(self):
         self.model.fit_generator(self.generate_floats(), samples_per_epoch=self.num_users,
             nb_epoch=self.epochs, verbose=True, callbacks=[self.rmse])
         # note that rmse will be sqrt(my_mse / sparsity) = srqt(my_mse * 80)
@@ -97,15 +115,15 @@ class NN:
         print('model saved as', self.save_name)
 
 
-    def predict(self):
+    def predict(self, dataset='qual'):
         print('predicting from model...')
-        qual = read_arr('qual')
+        qual = read_arr(dataset)
         print('maximums', np.max(qual, axis=0))
         qual[:, :2] -= 1
         qual_ratings = []
         user = -1
         print('maximums', np.max(qual, axis=0))
-        blocks = np.array_split(np.arange(0, self.num_users), 100)
+        blocks = np.array_split(np.arange(0, self.num_users), 500)
         block = -1
         block_start = -1
         for p, point in enumerate(qual):

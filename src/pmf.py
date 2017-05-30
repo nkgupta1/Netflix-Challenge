@@ -3,8 +3,8 @@ from numpy import linalg as LA
 from cache import *
 
 class PMF:
-    def __init__(self, num_feat=30, epsilon=0.01, _lambda=0.1, momentum=0.8, 
-            maxepoch=20, num_batches=10, batch_size=100000):
+    def __init__(self, num_feat=200, epsilon=0.005, _lambda=0.05, momentum=0.4, 
+            maxepoch=50, num_batches=10, batch_size=100000):
         self.num_feat = num_feat
         self.epsilon = epsilon
         self._lambda = _lambda
