@@ -22,15 +22,15 @@ def make_grad(probe_files, directory, model_name='grad_mod'):
     A = read_files(directory, probe_files).T
     s = read_arr('probe')[:, 3].astype(np.float32)
 
-    clf = GradientBoostingRegressor(n_estimators=100, verbose=2)
+    clf = GradientBoostingRegressor(n_estimators=10, verbose=2)
     clf.fit(A,s)
 
-    joblib.dump(clf, model_name + ".pkl")
+    joblib.dump(clf, model_name + "4.pkl")
 
-def eval_grad(qual_files, directory, save_name='g_blend', model_name='grad_mod'):
+def eval_grad(qual_files, directory, save_name='g_blend2', model_name='grad_mod'):
     A = read_files(directory, qual_files).T
 
-    clf = joblib.load(model_name + ".pkl")
+    clf = joblib.load(model_name + "2.pkl")
     print('\nMaking submission...')
     # preds = np.sum((clf.predict_proba(A))*np.transpose(clf.classes_),axis=1)
     preds = clf.predict(A)
@@ -145,7 +145,7 @@ if __name__ == '__main__':
             # ('rbm_100_overfit_probe.mat', 'new_rbm_100_overfit_qual.mat'),
             ('rbm_100_overfit_probe.mat',     'rbm_100_overfit_qual.mat'),
 
-            # ('rbm_100_5_0001_probe.mat', 'new_rbm_100_5_0001_qual.mat'),
+            ('rbm_100_5_0001_probe.mat', 'new_rbm_100_5_0001_qual.mat'),
             ('rbm_100_5_0001_probe.mat',     'rbm_100_5_0001_qual.mat'),
 
             # ('rbm_100_3_0001_probe.mat', 'new_rbm_100_3_0001_qual.mat'),
@@ -205,6 +205,6 @@ if __name__ == '__main__':
     # qual_blend(quals, directory='/home/nkgupta/tmp/BLENDING/')
 
     # Blend with gradient boosted regressors
-    # make_grad(probes, directory='../../Preds/')
-    # eval_grad(quals, directory='../../Preds/')
+    # make_grad(probes, directory='/home/nkgupta/tmp/BLENDING/')
+    # eval_grad(quals, directory='/home/nkgupta/tmp/BLENDING/')
     
