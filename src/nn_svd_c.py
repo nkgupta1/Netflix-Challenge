@@ -14,10 +14,10 @@ from keras.utils.np_utils import to_categorical
 
 
 class NN:
-    def __init__(self, mode='both', folder='svd3', biases=True, epochs=10, 
-        layers=(128, 512, 256), dropouts=(0.2, 0.2, 0.2), valid_per=1, 
-        save_epochs=[], w_reg=0.0005, b_reg=0.0005, ratings_vector=False, 
-        bag_dir='blend3', bags=128):
+    def __init__(self, mode='both', folder='svd3', biases=True, epochs=100, 
+        layers=(256, 2048, 512), dropouts=(0.2, 0.88, 0.88), valid_per=1, 
+        save_epochs=[], w_reg=0.00, b_reg=0.00, ratings_vector=False, 
+        bag_dir='blend3', bags=128, e_ratio=100):
         '''
         Uses the svd latent factors in the folder data/arg:folder to train a 
         neural network along with indices and ratings in base (uses biases if 
@@ -32,6 +32,8 @@ class NN:
         '''
         # (8096, 2048, 512) dropouts=(0.9, 0.9, 0.9) 
         self.data_mean = 3.60860891887339
+
+        self.e_ratio = e_ratio
 
         # weight and bias regularization
         self.w_reg, self.b_reg = w_reg, b_reg
@@ -48,7 +50,7 @@ class NN:
         # number of blocks to split the data into b/c of memory limitations:
         # provides much better performance than swapping >20gb in/out while 
         # training. the optimal number is dependent on individual hardware
-        self.num_blocks = 500
+        self.num_blocks = 2000
         
         # name of dataset to use for validation data
         self.valid_data = 'probe'
@@ -60,7 +62,7 @@ class NN:
         # epochs at which to save model (excluding final epoch)
         self.save_epochs = set(save_epochs)
 
-        predict = 'c-nnsvd-k50-e3-layers(1024, 256, 64)-dropouts(0.4, 0.4, 0.4)-regs0.0005,0.0005-rmse0.947'
+        predict = 'c-nnsvd-k50-e3-layers(3072, 512, 128)-dropouts(0.8, 0.8, 0.8)-rmse0.867'
         if mode == 'train':
             self.read_data()
             self.train()
@@ -74,6 +76,7 @@ class NN:
             self.train()
             self.save_model()
             self.predict()
+            self.predict('probe')
         elif mode == 'svd':
             self.read_data()
             self.get_svd_rmse()
@@ -83,6 +86,10 @@ class NN:
                 self.model = None
                 self.train()
                 self.predict(save_name=(bag_dir + '/' + str(b)))
+        elif mode == 'probe':
+            self.read_data(read_training=False)
+            self.load_model('../models/' + predict + '.h5')
+            self.predict('probe')
 
 
     def load_model(self, name):
@@ -273,18 +280,18 @@ class NN:
         # hidden layers 2, 3
         for l in [1, 2]: 
             if self.layers[l]:
-                self.model.add(Dense(self.layers[l], activation='sigmoid', 
+                self.model.add(Dense(self.layers[l], activation='relu', 
                 W_regularizer=regularizers.l2(self.w_reg),
                 b_regularizer=regularizers.l1(self.b_reg)))
                 if self.dropouts[l]:
                     self.model.add(Dropout(self.dropouts[l]))
         # output layer
-        opt = optimizers.adadelta() # optimizers.adam() # lr=0.001
+        opt = optimizers.adam() # optimizers.adam() # lr=0.001
         if self.ratings_vector:
-            self.model.add(Dense(5, activation='sigmoid'))
+            self.model.add(Dense(5, activation='relu'))
             self.model.compile(loss='categorical_crossentropy', optimizer=opt)
         else:
-            self.model.add(Dense(1, activation='linear'))
+            self.model.add(Dense(1, activation='relu'))
             # 'sgd' optimizer might not be a bad idea instead of adam:
             self.model.compile(loss='mse', optimizer=opt)
         self.model.summary()  # double-check model format
@@ -301,7 +308,7 @@ class NN:
         self.rmse = RMSE(self.generate_validation, self.get_training_rmse, 
             self.save_model, self.save_epochs, self.valid_per, self.ratings_vector)
         self.model.fit_generator(self.generate_block(), 
-            samples_per_epoch=self.num_points, nb_epoch=self.epochs, 
+            samples_per_epoch=self.num_points//self.e_ratio, nb_epoch=self.epochs, 
             verbose=True, callbacks=[self.rmse])
         print('RMSE training losses:', self.rmse.losses)
         if self.rmse.validate:
@@ -344,7 +351,7 @@ class NN:
                     str(self.save_epochs) + '\n')
 
 
-    def predict(self, save_name=None):
+    def predict(self, dataset='qual', save_name=None):
         '''
         Use self.model to predict the ratings for qual data, which are 
         used for submission and saved in ../data/submissions as a .dta 
@@ -352,7 +359,9 @@ class NN:
         '''
         print('predicting from model...')
         print('preprocessing data...')
-        qual_ij, _ = self.preprocess_data(read_arr('qual'))
+        if dataset == 'probe':
+            self.model_name += '-probe'
+        qual_ij, _ = self.preprocess_data(read_arr(dataset))
         testx = np.concatenate((self.u[qual_ij[:, 0]], self.v[qual_ij[:, 1]]), axis=1)
 
         print('making predictions...', testx.shape)
@@ -382,7 +391,10 @@ class NN:
         of every epoch.
         '''
         print('preparing validation data for callback...')
-        ij, valid_ratings = self.preprocess_data(read_arr(self.valid_data))
+        valid_data = read_arr(self.valid_data)
+        inds = (np.random.rand(100000) * valid_data.shape[0]).astype(np.uint32)
+        valid_data = valid_data[inds]
+        ij, valid_ratings = self.preprocess_data(valid_data)
         testx = np.concatenate((self.u[ij[:, 0]], self.v[ij[:, 1]]), axis=1)
         valid_ratings = valid_ratings[:, 0]
         return testx, valid_ratings

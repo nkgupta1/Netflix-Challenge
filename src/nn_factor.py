@@ -4,18 +4,17 @@ from cache import *
 import keras
 from keras.models import Sequential, load_model
 from keras import optimizers
-from keras.layers.core import Dense
+from keras.layers.core import Dense, Dropout
 
 
 class NN:
-    def __init__(self, mode='both', K=5, epochs=1):
+    def __init__(self, mode='both', K=100, epochs=3):
         self.num_users = 458293
         self.data_mean = 3.60860891887339
         self.K, self.epochs = K, epochs
         # number of blocks to split the data into b/c of memory limitations
         self.num_blocks = 50
         self.read_data()
-        # mode = 'predict'
         if mode == 'train':
             self.train()
             self.save_model()
@@ -26,7 +25,7 @@ class NN:
         elif mode == 'both':
             self.train()
             self.save_model()
-            self.predict('probe-nnfactor')
+            self.predict('nnfac-100e3')
 
 
     def read_data(self):
@@ -65,6 +64,7 @@ class NN:
         self.model = Sequential()
         self.model.add(Dense(self.K, input_shape=(17770,), activation='linear'))  # hidden layer
         self.model.add(Dense(17770, activation='linear'))  # output layer
+        self.model.add(Dropout(0.4))
         self.model.summary()  # double-check model format
         # 'sgd' optimizer might not be a bad idea instead of adam:
         self.model.compile(loss=self.my_mse, optimizer=optimizers.adam(lr=0.0001))       
@@ -125,7 +125,7 @@ class real_RMSE(keras.callbacks.Callback):
 
 
 if __name__ == '__main__':
-    NN(mode='predict', K=20, epochs=20)
+    NN()
 
 
 

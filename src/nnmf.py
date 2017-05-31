@@ -8,7 +8,7 @@ from keras.layers.core import Dense, Dropout
 
 
 class NN:
-    def __init__(self, mode='probe', K=150, epochs=100, dropouts=(None, None),
+    def __init__(self, mode='probe', K=150, epochs=1, dropouts=(None, None),
             save_epochs='all'):
         self.num_users = 458293
         self.data_mean = 3.60860891887339
@@ -16,12 +16,12 @@ class NN:
         self.K, self.epochs, self.dropouts = K, epochs, dropouts
         self.save_epochs = save_epochs
         # size of block to split the data into b/c of memory limitations
-        self.block_size = 500
+        self.block_size = 256
 
         self.read_data()
         self.save_name = 'nnmf-' + str(self.K) + '-' + str(self.epochs)
         
-        to_load = 'nnmf-k150-e100-rmse0.767'
+        to_load = 'nnmf-k150-e1-rmse0.111'
         if mode == 'train':
             self.train()
             self.save_model()
@@ -51,7 +51,7 @@ class NN:
 
 
     def read_data(self):
-        self.base = read_mat('base_sub')
+        self.base = read_mat('probe_sub')
 
 
     def my_mse(self, y_true, y_pred):
@@ -123,7 +123,7 @@ class NN:
         qual_ratings = []
         user = -1
         print('maximums', np.max(qual, axis=0))
-        blocks = np.array_split(np.arange(0, self.num_users), 500)
+        blocks = np.array_split(np.arange(0, self.num_users), 100)
         block = -1
         block_start = -1
         for p, point in enumerate(qual):
