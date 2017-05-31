@@ -8,9 +8,10 @@
 
 #define M 458293    // number of users
 #define N 17770     // number of movies
-#define K 75        // number of latent factors
+#define K 50        // number of latent factors
 
-#define NUM_TRAIN_PTS  98291669   // number of ratings
+// #define NUM_TRAIN_PTS  98291669   // number of ratings
+#define NUM_TRAIN_PTS  99666408   // number of ratings
 #define NUM_TEST_PTS   1374739    // number of ratings
 #define NUM_QUAL_PTS   2749898    // number of qual points
 

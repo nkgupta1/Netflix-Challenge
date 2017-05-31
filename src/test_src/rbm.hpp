@@ -109,6 +109,7 @@ public:
     // Pointers
     void init_pointers();
     void read_data(const string file, int *dta, int *dta_ids, int lc);
+    void init_datasets();
 
     // RNG
     void init_random();
