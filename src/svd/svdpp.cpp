@@ -217,7 +217,6 @@ svd_data* train_model(float eta, float reg, float **Y_train, float **Y_test,
         }
     }
 
-    // i hate myself but....
     // here is a list of movies that every user has rated
     int ** list_movies = new int*[M];
     for (int i = 0; i < M; i++) {
